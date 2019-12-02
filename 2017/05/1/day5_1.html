@@ -1,0 +1,22 @@
+<head>
+<script>
+function go() {
+  var input = document.getElementById('input').value.split("\n").map(x => parseInt(x))
+  var i = 0
+  var steps = 0
+  while (i >= 0 && i < input.length) {
+  	var out = input[i]
+    input[i] += 1
+    i += out
+    steps++
+  }
+  document.getElementById("output").innerHTML += steps + '<br>'
+}
+</script>
+</head>
+<body>
+<textarea id="input" rows="40" cols="70"></textarea>
+<button onclick="go();">Go</button>
+<br>
+<p id="output"></p>
+</body>
