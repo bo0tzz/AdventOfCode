@@ -77,6 +77,14 @@ func MakeInstructionSet(comp computer) map[int]Instruction {
 			write:  true,
 			jump:   false,
 		},
+		9: {
+			code:   9,
+			name:   "rel",
+			params: 1,
+			op:     comp.rel,
+			write:  false,
+			jump:   false,
+		},
 		99: {
 			code:   99,
 			name:   "exit",
@@ -131,13 +139,19 @@ func eq(params []int) int {
 }
 
 func (comp *computer) in(params []int) int {
-	v := <-comp.input
-	println(comp.id, "received", v, "from", comp.input)
-	return v
+	return <-comp.input
 }
 
 func (comp *computer) out(params []int) int {
-	println(comp.id, "sent", params[0], "to", comp.output)
-	comp.output <- params[0]
+	if comp.output != nil {
+		comp.output <- params[0]
+	} else {
+		println(params[0])
+	}
 	return 0 // Return value is ignored
+}
+
+func (comp *computer) rel(params []int) int {
+	comp.relativeBase = comp.relativeBase + params[0]
+	return 0 // Ignored
 }
