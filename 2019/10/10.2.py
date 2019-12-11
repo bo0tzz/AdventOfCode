@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from fractions import Fraction
 
 
@@ -91,6 +92,26 @@ with open('in', 'r') as infile:
             slopes_right[slope] = l
     above = sorted(above, key=keyfunc(best))
     below = sorted(below, key=keyfunc(best))
+    for k, v in slopes_left.items():
+        v = sorted(v, key=keyfunc(best))
+        slopes_left[k] = v
+    for k, v in slopes_right.items():
+        v = sorted(v, key=keyfunc(best))
+        slopes_right[k] = v
+    ordered_slopes_left = OrderedDict()
+    for key in sorted(slopes_left.keys()):
+        ordered_slopes_left[key] = slopes_left[key]
+    ordered_slopes_right = OrderedDict()
+    for key in sorted(slopes_right.keys()):
+        ordered_slopes_right[key] = slopes_right[key]
 
+    # Let's walk through a full rotation, manually, starting with up
+    destroyed = [
+        above.pop(0),
+        *[line.pop(0) for line in ordered_slopes_right.values()],
+        below.pop(0),
+        *[line.pop(0) for line in ordered_slopes_left.values()]]
+    last = destroyed[199]
+    print(last[0] * 100 + last[1])
 
 
