@@ -21,7 +21,7 @@ func newComputer(id int, memory []int, input chan int, output chan int, wg *sync
 	mem := make([]int, len(memory))
 	copy(mem, memory)
 	comp := &computer{id: id, memory: mem, input: input, output: output, wg: wg, pointer: 0, relativeBase: 0}
-	comp.instructions = MakeInstructionSet(*comp)
+	comp.instructions = MakeInstructionSet(comp)
 	return comp
 }
 
@@ -48,6 +48,7 @@ func (comp *computer) parseInstruction() (Instruction, []int) {
 	for _, mode := range m {
 		modes = append(modes, int(mode-'0'))
 	}
+	reverse(modes)
 	missing := instr.params - len(modes)
 	if instr.write {
 		missing++
@@ -55,7 +56,6 @@ func (comp *computer) parseInstruction() (Instruction, []int) {
 	for i := 0; i < missing; i++ {
 		modes = append(modes, 0)
 	}
-	reverse(modes)
 	return instr, modes
 }
 
@@ -84,6 +84,7 @@ func (comp *computer) getParams(count int, modes []int) []int {
 }
 
 func (comp *computer) resize(index int) bool {
+	index = index + 10 // Target slightly bigger
 	if index > len(comp.memory) {
 		size := len(comp.memory) * 2
 		if index > size {
@@ -130,7 +131,7 @@ func (comp *computer) run() {
 			mode := modes[op.params]
 			var target int
 			if mode == 2 {
-				target = comp.relativeBase //FIXME?
+				target = comp.relativeBase + comp.readMemory(comp.pointer+op.params+1)
 			} else {
 				target = comp.readMemory(comp.pointer + op.params + 1)
 			}

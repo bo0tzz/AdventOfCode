@@ -11,7 +11,7 @@ type Instruction struct {
 	jump   bool
 }
 
-func MakeInstructionSet(comp computer) map[int]Instruction {
+func MakeInstructionSet(comp *computer) map[int]Instruction {
 	return map[int]Instruction{
 		1: {
 			code:   1,
