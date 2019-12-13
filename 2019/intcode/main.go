@@ -14,6 +14,6 @@ func read(filename string) string {
 }
 
 func main() {
-	str := read("2019/13/in")
-	d13p2(str)
+	str := read("2019/11/in")
+	d11p1(str)
 }

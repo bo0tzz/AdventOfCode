@@ -26,3 +26,11 @@ func readMem(input string) []int {
 
 	return mem
 }
+
+func runComputer(input string) (chan int, chan int) {
+	memory := readMem(input)
+	inputChan, outputChan := make(chan int, 10), make(chan int, 10)
+	comp := newComputer(0, memory, inputChan, outputChan, nil)
+	go comp.run()
+	return inputChan, outputChan
+}
