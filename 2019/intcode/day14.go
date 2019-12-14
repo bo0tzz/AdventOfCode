@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -130,4 +131,61 @@ func d14p1(input string) {
 	spare := make(map[chemical]int)
 	cost, _ := oreCostToProduce(goal, reactions, spare)
 	println(cost)
+}
+
+func d14p2(input string) {
+	lines := strings.Split(input, "\n")
+	reactions := make(map[chemical]reaction)
+	for _, r := range lines {
+		rct := parseReaction(r)
+		reactions[rct.output.chem] = rct
+	}
+
+	amount := 1
+	goal := quantity{
+		chem:   chemical{name: "FUEL"},
+		amount: amount,
+	}
+	spare := make(map[chemical]int)
+	cost, _ := oreCostToProduce(goal, reactions, spare)
+
+	cache := map[int]int{amount: cost}
+	for {
+		amount *= 2
+		goal := quantity{
+			chem:   chemical{name: "FUEL"},
+			amount: amount,
+		}
+		spare := make(map[chemical]int)
+		c, _ := oreCostToProduce(goal, reactions, spare)
+		cache[amount] = c
+		println(amount, c)
+		if c > 1000000000000 {
+			break
+		}
+	}
+
+	low := 0
+	high := 0
+	for k, _ := range cache {
+		high = int(math.Max(float64(high), float64(k)))
+	}
+	target := 1000000000000
+	for {
+		if low == high {
+			println("DONE: ", low)
+		}
+		mid := low + (high-low)/2
+		cost, ok := cache[mid]
+		if !ok {
+			cost, _ = oreCostToProduce(quantity{chem: chemical{name: "FUEL"}, amount: mid}, reactions, make(map[chemical]int))
+			cache[mid] = cost
+		}
+		println(mid, cost)
+		if cost < target {
+			low = mid
+		} else {
+			high = mid
+		}
+	}
 }
