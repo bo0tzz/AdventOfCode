@@ -172,10 +172,11 @@ func d14p2(input string) {
 	}
 	target := 1000000000000
 	for {
-		if low == high {
-			println("DONE: ", low)
-		}
 		mid := low + (high-low)/2
+		if mid == low {
+			println("DONE: ", mid)
+			break
+		}
 		cost, ok := cache[mid]
 		if !ok {
 			cost, _ = oreCostToProduce(quantity{chem: chemical{name: "FUEL"}, amount: mid}, reactions, make(map[chemical]int))
