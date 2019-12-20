@@ -85,3 +85,65 @@ func d11p1(mem string) {
 	println(len(touched))
 
 }
+
+func d11p2(mem string) {
+	input, output := runComputer(mem)
+	hull := make(map[int]map[int]int)
+	x, y := 0, 0
+	dir := UP
+
+	l := make(map[int]int)
+	l[x] = 1
+	hull[y] = l
+
+	for {
+		line, ok := hull[y]
+		if !ok {
+			line = make(map[int]int)
+		}
+
+		panel, ko := line[x]
+		if !ko {
+			panel = 0
+		}
+
+		input <- panel
+		color, running := <-output
+		if !running {
+			break
+		}
+
+		line[x] = color
+		hull[y] = line
+
+		newDir := <-output
+		if newDir == 0 {
+			dir = dir.left()
+		} else if newDir == 1 {
+			dir = dir.right()
+		}
+
+		d := deltas[dir]
+		x += d.x
+		y += d.y
+
+	}
+
+	println("Printing")
+
+	for y := 3; y > -7; y-- {
+		for x := 0; x < 50; x++ {
+			if line, ok := hull[y]; ok {
+				if color, ko := line[x]; ko {
+					if color == 1 {
+						print("\u2588")
+					} else {
+						print(" ")
+					}
+				}
+			}
+		}
+		println("")
+	}
+
+}
