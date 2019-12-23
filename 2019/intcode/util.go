@@ -34,3 +34,19 @@ func runComputer(input string) (chan int, chan int) {
 	go comp.run()
 	return inputChan, outputChan
 }
+
+func min(i int, j int) int {
+	if i < j {
+		return i
+	} else {
+		return j
+	}
+}
+
+func max(i int, j int) int {
+	if i > j {
+		return i
+	} else {
+		return j
+	}
+}
