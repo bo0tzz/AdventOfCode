@@ -1,4 +1,5 @@
 defmodule AdventOfCode do
+  use Application
   @moduledoc """
   Documentation for AdventOfCode.
   """
@@ -6,16 +7,14 @@ defmodule AdventOfCode do
   @aoc_modules [
     Day1_1,
     Day1_2,
+    Day2_1,
   ]
-  @doc """
-  Hello world.
 
-  ## Examples
+  def start(_type, _args) do
+      main()
+      {:ok, self()}
+  end
 
-      iex> AdventOfCode.hello()
-      :world
-
-  """
   def main do
     children = Enum.map(@aoc_modules, &run_module_async/1)
     receive_results(Enum.count(children))
@@ -62,5 +61,3 @@ defmodule AdventOfCode do
     "./input/" <> atom_name
   end
 end
-
-AdventOfCode.main()
