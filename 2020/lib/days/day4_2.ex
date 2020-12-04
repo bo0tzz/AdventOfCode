@@ -20,21 +20,21 @@ defmodule Day4_2 do
     end
   end
 
-  def between(value, from, to) do
+  def int(value) do
     {value, _} = Integer.parse(value)
-    value >= from and value <= to
+    value
   end
 
-  def validate("byr", value), do: between(value, 1920, 2002)
-  def validate("iyr", value), do: between(value, 2010, 2020)
-  def validate("eyr", value), do: between(value, 2020, 2030)
+  def validate("byr", value), do: int(value) in 1920..2002
+  def validate("iyr", value), do: int(value) in 2010..2020
+  def validate("eyr", value), do: int(value) in 2020..2030
   def validate("ecl", value), do: value in @valid_eye_colours
   def validate("hcl", value), do: Regex.match?(~r/^#[0-9a-f]{6}$/, value)
   def validate("pid", value), do: Regex.match?(~r/^\d{9}$/, value)
   def validate("hgt", value) do
     case Regex.run(~r/^(\d+)(in|cm)$/, value) do
-      [_, n, "cm"] -> between(n, 150, 193)
-      [_, n, "in"] -> between(n, 59, 76)
+      [_, n, "cm"] -> int(n) in 150..193
+      [_, n, "in"] -> int(n) in 59..76
       _ -> false
     end
   end
