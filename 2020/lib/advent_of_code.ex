@@ -30,14 +30,14 @@ defmodule AdventOfCode do
       :done
     else
       receive do
-        {module, result} -> log_result(module, result)
+        {module, result, time} -> log_result(module, result, time)
       end
       receive_results(count - 1)
     end
   end
 
-  def log_result(module, result) do
-    IO.inspect "Got result from module " <> Atom.to_string(module) <> ": [" <> Kernel.inspect(result) <> "]"
+  def log_result(module, result, time) do
+    IO.inspect "Got result from module #{Atom.to_string(module)}: [#{Kernel.inspect(result)}] in #{time/1000} ms"
   end
 
   def run_module_async(module) do
@@ -46,10 +46,9 @@ defmodule AdventOfCode do
   end
 
   def run_module(module, parent) do
-    result = read_input(module)
-    |> module.test
-
-    send(parent, {module, result})
+    input = read_input(module)
+    {time, result} = :timer.tc(module, :test, [input])
+    send(parent, {module, result, time})
   end
 
   def read_input(module) do
