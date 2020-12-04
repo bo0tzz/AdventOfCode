@@ -4,7 +4,11 @@ defmodule Day4_1 do
 
   def test(input) do
     String.split(input, @empty_line_regex)
-    |> Enum.map(fn data -> Enum.all?(@required_fields, &(String.contains?(data, &1))) end)
+    |> Enum.map(&is_valid/1)
     |> Enum.count(&(&1))
+  end
+
+  def is_valid(passport) do
+    Enum.all?(@required_fields, &(String.contains?(passport, &1)))
   end
 end
