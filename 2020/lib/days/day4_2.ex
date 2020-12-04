@@ -15,7 +15,7 @@ defmodule Day4_2 do
 
   def validate_field(field, passport) do
     case Regex.run(~r/#{field}:(\S+)/, passport) do
-      [_, value] -> Kernel.apply(Day4_2, String.to_atom(field), [value])
+      [_, value] -> validate(field, value)
       nil -> false
     end
   end
@@ -25,13 +25,13 @@ defmodule Day4_2 do
     value >= from and value <= to
   end
 
-  def byr(value), do: between(value, 1920, 2002)
-
-  def iyr(value), do: between(value, 2010, 2020)
-
-  def eyr(value), do: between(value, 2020, 2030)
-
-  def hgt(value) do
+  def validate("byr", value), do: between(value, 1920, 2002)
+  def validate("iyr", value), do: between(value, 2010, 2020)
+  def validate("eyr", value), do: between(value, 2020, 2030)
+  def validate("ecl", value), do: value in @valid_eye_colours
+  def validate("hcl", value), do: Regex.match?(~r/^#[0-9a-f]{6}$/, value)
+  def validate("pid", value), do: Regex.match?(~r/^\d{9}$/, value)
+  def validate("hgt", value) do
     case Regex.run(~r/^(\d+)(in|cm)$/, value) do
       [_, n, "cm"] -> between(n, 150, 193)
       [_, n, "in"] -> between(n, 59, 76)
@@ -39,9 +39,4 @@ defmodule Day4_2 do
     end
   end
 
-  def hcl(value), do: Regex.match?(~r/^#[0-9a-f]{6}$/, value)
-
-  def ecl(value), do: value in @valid_eye_colours
-
-  def pid(value), do: Regex.match?(~r/^\d{9}$/, value)
 end
