@@ -25,35 +25,23 @@ defmodule Day4_2 do
     value >= from and value <= to
   end
 
-  def byr(value) do
-    between(value, 1920, 2002)
-  end
+  def byr(value), do: between(value, 1920, 2002)
 
-  def iyr(value) do
-    between(value, 2010, 2020)
-  end
+  def iyr(value), do: between(value, 2010, 2020)
 
-  def eyr(value) do
-    between(value, 2020, 2030)
-  end
+  def eyr(value), do: between(value, 2020, 2030)
 
   def hgt(value) do
-    case Regex.run(~r/(\d+)(in|cm)/, value) do
+    case Regex.run(~r/^(\d+)(in|cm)$/, value) do
       [_, n, "cm"] -> between(n, 150, 193)
       [_, n, "in"] -> between(n, 59, 76)
       _ -> false
     end
   end
 
-  def hcl(value) do
-    Regex.match?(~r/#[0-9a-f]{6}/, value)
-  end
+  def hcl(value), do: Regex.match?(~r/^#[0-9a-f]{6}$/, value)
 
-  def ecl(value) do
-    value in @valid_eye_colours
-  end
+  def ecl(value), do: value in @valid_eye_colours
 
-  def pid(value) do
-    Regex.match?(~r/\d{9}/, value)
-  end
+  def pid(value), do: Regex.match?(~r/^\d{9}$/, value)
 end
