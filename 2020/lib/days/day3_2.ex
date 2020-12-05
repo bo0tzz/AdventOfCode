@@ -20,7 +20,8 @@ defmodule Day3_2 do
   end
 
   def parse_line(line) do
-    String.codepoints(line)
+    String.trim(line)
+    |> String.codepoints()
     |> Enum.map(&parse_character/1)
   end
 
