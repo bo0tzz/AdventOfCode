@@ -8,7 +8,7 @@ defmodule Day7_2 do
     |> find_contents("shiny gold")
     |> List.flatten()
     |> Enum.count()
-    |> (&(&1 - 1)).()
+    |> Kernel.-(1)
   end
 
   def find_contents(graph, bag) do
