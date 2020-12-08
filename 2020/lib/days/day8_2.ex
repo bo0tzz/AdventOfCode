@@ -46,7 +46,5 @@ defmodule Day8_2 do
   def parse_instruction("acc" <> arg), do: {:acc, int(arg)}
   def parse_instruction("nop" <> arg), do: {:nop, int(arg)}
 
-  def int("-"<> n), do: 0 - elem(Integer.parse(n), 0)
-  def int("+"<> n), do: elem(Integer.parse(n), 0)
-  def int(n), do: String.trim(n) |> int()
+  def int(n), do: String.trim(n) |> Integer.parse() |> elem(0)
 end
