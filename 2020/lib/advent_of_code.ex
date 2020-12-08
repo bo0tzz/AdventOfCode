@@ -20,6 +20,7 @@ defmodule AdventOfCode do
     Day7_1,
     Day7_2,
     Day8_1,
+    Day8_2,
   ]
 
   def start(_type, _args) do
