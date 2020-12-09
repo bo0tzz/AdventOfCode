@@ -3,8 +3,7 @@ defmodule Day9_2 do
     input = Util.lines(input)
     |> Enum.map(&Integer.parse/1)
     |> Enum.map(&(elem(&1, 0)))
-    buf = Enum.take(input, 25)
-    rest = Enum.drop(input, 25)
+    {buf, rest} = Enum.split(input, 25)
     {:invalid, num} = find_invalid(buf, rest)
     find_contiguous_sum(input, num)
   end
