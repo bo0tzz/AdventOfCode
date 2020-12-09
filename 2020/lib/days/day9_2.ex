@@ -17,9 +17,7 @@ defmodule Day9_2 do
         n -> {:cont, {:cont, {n, [elem | seen]}}}
       end
     end) |> case do
-      {:found, {_, seen}} ->
-        {a, b} = Enum.sort(seen, :desc) |> head_tail()
-        a + b
+      {:found, {_, seen}} -> Enum.min(seen) + Enum.max(seen)
       {:fail, _} -> tl(input) |> find_contiguous_sum(sum)
     end
   end
