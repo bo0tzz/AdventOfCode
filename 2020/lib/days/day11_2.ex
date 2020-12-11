@@ -35,7 +35,7 @@ defmodule Day11_2 do
     new_grid = Enum.map(grid, &map_line(grid, &1))
 
     case new_grid do
-      g when g == grid -> g
+      ^grid -> grid
       _ -> run_automata(new_grid)
     end
   end
