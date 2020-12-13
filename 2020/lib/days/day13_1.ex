@@ -5,7 +5,7 @@ defmodule Day13_1 do
     {bus, min_until_departure} = String.split(buses, ",")
     |> Enum.filter(&(&1 != "x"))
     |> Enum.map(&String.to_integer/1)
-    |> Enum.map(&with_min_until_departure(&1, timestamp))
+    |> Enum.map(&({&1, &1 - Integer.mod(timestamp, &1)}))
     |> Enum.sort(fn {_, m}, {_, n} -> m <= n end)
     |> hd()
     bus * min_until_departure
