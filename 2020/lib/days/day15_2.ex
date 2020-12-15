@@ -6,15 +6,20 @@ defmodule Day15_2 do
 
     seen = List.delete(starting_ns, last) |> Map.new()
     i = map_size(seen)
-    process(seen, i, latest)
+    ets = :ets.new(:day15_seen, [:set])
+    Enum.each(seen, fn s ->
+      :ets.insert(ets, s)
+    end)
+    process(ets, i, latest)
   end
 
   def process(_, 29999999, latest), do: latest
   def process(seen, i, latest) do
-    age = case Map.get(seen, latest) do
-      nil -> 0
-      last_seen -> i - last_seen
+    age = case :ets.lookup(seen, latest) do
+      [] -> 0
+      [{_, last_seen}] -> i - last_seen
     end
-    process(Map.put(seen, latest, i), i + 1, age)
+    :ets.insert(seen, {latest, i})
+    process(seen, i + 1, age)
   end
 end
