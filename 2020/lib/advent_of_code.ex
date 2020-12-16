@@ -5,60 +5,37 @@ defmodule AdventOfCode do
   Documentation for AdventOfCode.
   """
 
-  @aoc_modules [
-    Day1_1,
-    Day1_2,
-    Day2_1,
-    Day2_2,
-    Day3_1,
-    Day3_2,
-    Day4_1,
-    Day4_2,
-    Day5_1,
-    Day5_2,
-    Day6_1,
-    Day6_2,
-    Day7_1,
-    Day7_2,
-    Day8_1,
-    Day8_2,
-    Day9_1,
-    Day9_2,
-    Day10_1,
-    Day10_2,
-    Day11_1,
-    Day11_2,
-    Day12_1,
-    Day12_2,
-    Day13_1,
-    Day13_2,
-    Day14_1,
-    # Day14_2,
-    Day15_1,
-    Day15_2,
-    Day16_1,
-    Day16_2
-  ]
+  def day_modules() do
+    modules = for day <- 1..25, part <- 1..2 do
+      try do
+        String.to_existing_atom("Elixir.Day#{day}_#{part}")
+      rescue
+        ArgumentError -> nil
+      end
+    end
+    |> Enum.filter(&!is_nil(&1))
+
+    # Run the most recent module first
+    {tail, modules} = List.pop_at(modules, -1)
+    [tail | modules]
+  end
 
   def start(_type, _args) do
+    Process.flag(:trap_exit, false)
     main()
     {:ok, self()}
   end
 
   def main do
-    children = Enum.map(@aoc_modules, &run_module_async/1)
-    receive_results(Enum.count(children))
+    day_modules() |> Enum.map(&run_module_async/1) |> receive_results()
   end
 
-  def receive_results(count) do
-    if count == 0 do
-      :done
-    else
-      receive do
-        {module, result, time} -> log_result(module, result, time)
-      end
-
-      receive_results(count - 1)
+  def receive_results([]), do: :ok
+  def receive_results([{_, module} | rest]) do
+    receive do
+      {^module, result, time} ->
+        log_result(module, result, time)
+        receive_results(rest)
     end
   end
 
@@ -72,7 +49,8 @@ defmodule AdventOfCode do
 
   def run_module_async(module) do
     current = self()
-    spawn(fn -> run_module(module, current) end)
+    pid = spawn_link(fn -> run_module(module, current) end)
+    {pid, module}
   end
 
   def run_module(module, parent) do
