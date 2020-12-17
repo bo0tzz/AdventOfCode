@@ -38,6 +38,7 @@ defmodule Day17_1 do
       neighbours_keep_original(l)
     end
     |> List.flatten()
+    |> Enum.uniq()
   end
 
   def get_cube_state(location, state) do
