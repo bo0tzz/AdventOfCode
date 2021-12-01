@@ -5,7 +5,7 @@ defmodule Day1_2 do
     |> windowed_sums()
 
     {count, _} = sums
-    |> Enum.drop(2) |> IO.inspect()
+    |> Enum.drop(2)
     |> Enum.reduce({0, :first}, &process/2)
     count
   end
