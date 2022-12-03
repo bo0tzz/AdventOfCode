@@ -1,0 +1,93 @@
+# AoC 2022 Day 2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Section
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Moves do
+  def parse_move("A"), do: :rock
+  def parse_move("X"), do: :rock
+  def parse_move("B"), do: :paper
+  def parse_move("Y"), do: :paper
+  def parse_move("C"), do: :scissors
+  def parse_move("Z"), do: :scissors
+
+  def move_score(:rock), do: 1
+  def move_score(:paper), do: 2
+  def move_score(:scissors), do: 3
+
+  def outcome({:rock, :paper}), do: :win
+  def outcome({:rock, :scissors}), do: :loss
+  def outcome({:paper, :rock}), do: :loss
+  def outcome({:paper, :scissors}), do: :win
+  def outcome({:scissors, :rock}), do: :win
+  def outcome({:scissors, :paper}), do: :loss
+  def outcome({move, move}), do: :draw
+
+  def outcome_score(:loss), do: 0
+  def outcome_score(:draw), do: 3
+  def outcome_score(:win), do: 6
+
+  def score_round({_, move} = round) do
+    move_score(move) + (round |> outcome() |> outcome_score())
+  end
+end
+```
+
+```elixir
+rounds =
+  input
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.split(" ")
+    |> Enum.map(&Moves.parse_move/1)
+    |> List.to_tuple()
+  end)
+
+rounds
+|> Enum.map(&Moves.score_round/1)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+defmodule Moves2 do
+  def move_to_result(:rock), do: :loss
+  def move_to_result(:paper), do: :draw
+  def move_to_result(:scissors), do: :win
+
+  def choose_move({opponent_move, goal}) do
+    chosen_move =
+      [:rock, :paper, :scissors]
+      |> Enum.find(fn move -> Moves.outcome({opponent_move, move}) == goal end)
+
+    {opponent_move, chosen_move}
+  end
+end
+```
+
+```elixir
+rounds
+|> Enum.map(fn {move, res} -> {move, Moves2.move_to_result(res)} end)
+|> Enum.map(&Moves2.choose_move/1)
+|> Enum.map(&Moves.score_round/1)
+|> Enum.sum()
+```

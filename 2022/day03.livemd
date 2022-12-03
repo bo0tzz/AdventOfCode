@@ -1,0 +1,79 @@
+# AoC 2022 Day 3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Section
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+alphabet =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  |> String.graphemes()
+
+get_priority = fn item ->
+  Enum.find_index(alphabet, &match?(^item, &1)) + 1
+end
+```
+
+```elixir
+require Integer
+
+rucksacks =
+  input
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+  |> Enum.map(fn rucksack ->
+    length = Enum.count(rucksack)
+    # Just to be sure
+    true = Integer.is_even(length)
+    Enum.split(rucksack, Integer.floor_div(length, 2))
+  end)
+
+shared_items =
+  rucksacks
+  |> Enum.map(fn {first, second} ->
+    first_set = MapSet.new(first)
+    second_set = MapSet.new(second)
+    [shared_item] = MapSet.intersection(first_set, second_set) |> MapSet.to_list()
+    shared_item
+  end)
+
+shared_items
+|> Enum.map(get_priority)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+groups =
+  input
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+  |> Enum.map(&MapSet.new/1)
+  |> Enum.chunk_every(3)
+  |> Enum.map(fn group ->
+    [item] =
+      group
+      |> Enum.reduce(&MapSet.intersection/2)
+      |> MapSet.to_list()
+
+    item
+  end)
+  |> Enum.map(get_priority)
+  |> Enum.sum()
+```
