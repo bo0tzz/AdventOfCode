@@ -1,4 +1,4 @@
-# AoC 2022 Template
+# AoC 2022
 
 ```elixir
 Mix.install([
@@ -7,7 +7,7 @@ Mix.install([
 ])
 ```
 
-## Section
+## Input
 
 ```elixir
 input_field = Kino.Input.textarea("Puzzle input")
