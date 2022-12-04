@@ -1,0 +1,52 @@
+# AoC 2022 Day 4
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+to_range = fn str ->
+  [from, to] = String.split(str, "-") |> Enum.map(&String.to_integer/1)
+  from..to
+end
+
+pairs =
+  input
+  |> String.split("\n")
+  |> Enum.map(fn pair ->
+    pair
+    |> String.split(",")
+    |> Enum.map(to_range)
+    |> Enum.map(&MapSet.new/1)
+    |> List.to_tuple()
+  end)
+
+pairs
+|> Enum.filter(fn {left, right} ->
+  MapSet.subset?(left, right) || MapSet.subset?(right, left)
+end)
+|> Enum.count()
+```
+
+## Part 2
+
+```elixir
+pairs
+|> Enum.reject(fn {l, r} -> MapSet.disjoint?(l, r) end)
+|> Enum.count()
+```
