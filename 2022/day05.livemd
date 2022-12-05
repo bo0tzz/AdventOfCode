@@ -1,0 +1,120 @@
+# AoC 2022 Day 5
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Stacks do
+  @move_regex ~r/move (\d+) from (\d+) to (\d+)/
+  @stack_regex ~r/(\s{3}|\[(\w)])\s?/
+
+  def parse_row(row) do
+    Regex.scan(@stack_regex, row, capture: :all_but_first)
+    |> Enum.map(&parse_item/1)
+  end
+
+  def parse_item(["    "]), do: :empty
+  def parse_item(["   "]), do: :empty
+  def parse_item([_, letter]), do: String.to_atom(letter)
+
+  def parse_move(move) do
+    [amount, from, to] =
+      Regex.run(@move_regex, move, capture: :all_but_first)
+      |> Enum.map(&String.to_integer/1)
+
+    {amount, from, to}
+  end
+
+  def move_one(stacks, from, to) do
+    [item | from_stack] = stacks[from]
+    to_stack = [item | stacks[to]]
+
+    stacks
+    |> Map.replace!(from, from_stack)
+    |> Map.replace!(to, to_stack)
+  end
+
+  def apply_move(stacks, {0, _, _}), do: stacks
+
+  def apply_move(stacks, {amount, from, to}) do
+    stacks
+    |> move_one(from, to)
+    |> apply_move({amount - 1, from, to})
+  end
+end
+```
+
+```elixir
+[stacks_str, moves_str] = String.split(input, "\n\n")
+```
+
+```elixir
+stacks =
+  stacks_str
+  |> String.split("\n")
+  |> List.delete_at(-1)
+  |> Enum.map(&Stacks.parse_row/1)
+  # And for this trick, I will...
+  |> Enum.zip()
+  |> Enum.map(fn tup ->
+    tup
+    |> Tuple.to_list()
+    |> Enum.reject(&match?(:empty, &1))
+  end)
+  |> Enum.with_index(fn element, index -> {index + 1, element} end)
+  |> Enum.into(%{})
+```
+
+```elixir
+moves =
+  moves_str
+  |> String.split("\n")
+  |> Enum.map(&Stacks.parse_move/1)
+```
+
+```elixir
+moves
+|> Enum.reduce(stacks, &Stacks.apply_move(&2, &1))
+|> Map.values()
+|> Enum.map(&List.first/1)
+|> Enum.join()
+```
+
+## Part 2
+
+```elixir
+defmodule Stacks2 do
+  def apply_move(stacks, {amount, from, to}) do
+    {items, from_stack} = Enum.split(stacks[from], amount)
+    to_stack = items ++ stacks[to]
+
+    stacks
+    |> Map.replace!(from, from_stack)
+    |> Map.replace!(to, to_stack)
+  end
+end
+```
+
+```elixir
+moves
+|> Enum.reduce(stacks, &Stacks2.apply_move(&2, &1))
+|> Map.values()
+|> Enum.map(&List.first/1)
+|> Enum.join()
+```
