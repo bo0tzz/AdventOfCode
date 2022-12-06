@@ -1,0 +1,52 @@
+# AoC 2022 - fork
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+idx =
+  input
+  |> String.graphemes()
+  |> Enum.chunk_every(4, 1)
+  |> Enum.map(fn l ->
+    size = Enum.count(l)
+    uniq = Enum.uniq(l) |> Enum.count()
+    size == uniq
+  end)
+  |> Enum.find_index(& &1)
+
+idx + 4
+```
+
+## Part 2
+
+```elixir
+idx =
+  input
+  |> String.graphemes()
+  |> Enum.chunk_every(14, 1)
+  |> Enum.map(fn l ->
+    size = Enum.count(l)
+    uniq = Enum.uniq(l) |> Enum.count()
+    size == uniq
+  end)
+  |> Enum.find_index(& &1)
+
+idx + 14
+```
