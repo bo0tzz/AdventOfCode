@@ -112,41 +112,86 @@ parsed = TreeParser.parse(tree)
 ```
 
 ```elixir
-defmodule FolderScanner do
-  def name({name, _content}), do: name
-  def content({_name, content}), do: content
+defmodule FolderEntry do
+  defstruct [:name, :size, :children]
 
-  def size({_name, size}) when is_integer(size), do: size
-
-  def size({_name, folder}) do
-    # Enum.map(folder, &FolderScanner.size/1)
-    Enum.map(folder, fn entry ->
-      IO.inspect(entry)
-      FolderScanner.size(entry)
-    end)
-    |> Enum.sum()
+  def parse({name, children}) do
+    children = children |> PathEntries.parse_children()
+    size = sum_size(children)
+    %FolderEntry{name: name, size: size, children: children}
   end
 
-  def list_nested_folders([]), do: []
-
-  def list_nested_folders([current | remaining]) do
-    direct_children =
-      current
-      |> Enum.filter(fn {_name, content} -> is_map(content) end)
-
-    child_names = direct_children |> Enum.map(&name/1)
-
-    nested = Enum.map(direct_children, &content/1)
-    direct_children
+  def sum_size(children) do
+    children
+    |> Enum.map(fn child -> child.size end)
+    |> Enum.sum()
   end
 end
 
-root = parsed["/"]
-FolderScanner.list_nested_folders([root])
+defmodule FileEntry do
+  defstruct [:name, :size]
+
+  def parse({name, size}) when is_integer(size), do: %FileEntry{name: name, size: size}
+end
+
+defmodule PathEntries do
+  def parse_child({_, size} = entry) when is_integer(size), do: FileEntry.parse(entry)
+  def parse_child(entry), do: FolderEntry.parse(entry)
+
+  def parse_children(children) do
+    children
+    |> Enum.map(&parse_child/1)
+  end
+
+  def get_children_below_size(%FileEntry{size: s} = entry, size_lim) when s <= size_lim,
+    do: [entry]
+
+  def get_children_below_size(%FileEntry{size: _too_large}, _), do: []
+
+  def get_children_below_size(%FolderEntry{size: s, children: c} = entry, size_lim) do
+    case s do
+      s when s <= size_lim -> [entry | Enum.flat_map(c, &get_children_below_size(&1, size_lim))]
+      _ -> Enum.flat_map(c, &get_children_below_size(&1, size_lim))
+    end
+  end
+end
+```
+
+```elixir
+folder = FolderEntry.parse({"/", parsed["/"]})
+
+folder
+|> PathEntries.get_children_below_size(100_000)
+|> Enum.filter(&match?(%FolderEntry{}, &1))
+|> Enum.map(& &1.size)
+|> Enum.sum()
 ```
 
 ## Part 2
 
 ```elixir
+defmodule PathEntries2 do
+  def get_children_above_size(%FileEntry{size: s} = entry, size_lim) when s >= size_lim,
+    do: [entry]
 
+  def get_children_above_size(%FileEntry{size: _too_large}, _), do: []
+
+  def get_children_above_size(%FolderEntry{size: s, children: c} = entry, size_lim) do
+    case s do
+      s when s >= size_lim -> [entry | Enum.flat_map(c, &get_children_above_size(&1, size_lim))]
+      _ -> Enum.flat_map(c, &get_children_above_size(&1, size_lim))
+    end
+  end
+end
+```
+
+```elixir
+total_disk = 70_000_000
+needed_space = 30_000_000
+curr_free_space = total_disk - folder.size
+delete_min = needed_space - curr_free_space
+
+PathEntries2.get_children_above_size(folder, delete_min)
+|> Enum.map(& &1.size)
+|> Enum.min()
 ```
