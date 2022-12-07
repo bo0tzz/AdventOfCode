@@ -1,0 +1,152 @@
+# AoC 2022 Day 7
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"},
+  {:nimble_parsec, "~> 1.2"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Parser do
+  import NimbleParsec
+
+  filename = ascii_string([?a..?z, ?.], min: 1)
+  newline = ignore(string("\n"))
+
+  cd =
+    ignore(string("$ cd "))
+    |> choice([
+      string("/"),
+      string(".."),
+      filename
+    ])
+    |> concat(newline)
+    |> tag(:cd)
+
+  file =
+    integer(min: 1)
+    |> ignore(string(" "))
+    |> concat(filename)
+    |> tag(:file)
+
+  dir =
+    ignore(string("dir "))
+    |> concat(filename)
+    |> tag(:dir)
+
+  listing =
+    ignore(string("$ ls\n"))
+    |> repeat(
+      choice([
+        dir,
+        file
+      ])
+      |> optional(newline)
+    )
+    |> tag(:listing)
+
+  defparsec(:parse_tree, repeat(choice([listing, cd, newline])))
+  defparsec(:debug, file)
+end
+```
+
+```elixir
+{:ok, tree, "", _, _, _} = Parser.parse_tree(input)
+```
+
+```elixir
+defmodule TreeParser do
+  defstruct [:current_path, :parsed_tree]
+
+  defp add_path([_current | rest], ".."), do: rest
+  defp add_path(path, dir), do: [dir | path]
+
+  def add_entry({:dir, [name]}, folder), do: Map.put(folder, name, %{})
+  def add_entry({:file, [size, name]}, folder), do: Map.put(folder, name, size)
+
+  def parse([], %TreeParser{parsed_tree: parsed_tree}), do: parsed_tree
+
+  def parse(
+        [{:cd, [dir]} | tree],
+        %TreeParser{current_path: current_path} = state
+      ) do
+    current_path = add_path(current_path, dir)
+    parse(tree, %{state | current_path: current_path})
+  end
+
+  def parse(
+        [{:listing, entries} | tree],
+        %TreeParser{
+          current_path: current_path,
+          parsed_tree: parsed_tree
+        } = state
+      ) do
+    access_path = Enum.reverse(current_path)
+
+    folder = Enum.reduce(entries, %{}, &add_entry/2)
+    new_parsed_tree = put_in(parsed_tree, access_path, folder)
+
+    parse(tree, %{state | parsed_tree: new_parsed_tree})
+  end
+
+  def parse(tree) do
+    parse(tree, %TreeParser{current_path: [], parsed_tree: %{}})
+  end
+end
+
+parsed = TreeParser.parse(tree)
+```
+
+```elixir
+defmodule FolderScanner do
+  def name({name, _content}), do: name
+  def content({_name, content}), do: content
+
+  def size({_name, size}) when is_integer(size), do: size
+
+  def size({_name, folder}) do
+    # Enum.map(folder, &FolderScanner.size/1)
+    Enum.map(folder, fn entry ->
+      IO.inspect(entry)
+      FolderScanner.size(entry)
+    end)
+    |> Enum.sum()
+  end
+
+  def list_nested_folders([]), do: []
+
+  def list_nested_folders([current | remaining]) do
+    direct_children =
+      current
+      |> Enum.filter(fn {_name, content} -> is_map(content) end)
+
+    child_names = direct_children |> Enum.map(&name/1)
+
+    nested = Enum.map(direct_children, &content/1)
+    direct_children
+  end
+end
+
+root = parsed["/"]
+FolderScanner.list_nested_folders([root])
+```
+
+## Part 2
+
+```elixir
+
+```
