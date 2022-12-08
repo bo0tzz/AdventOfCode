@@ -1,0 +1,101 @@
+# AoC 2022 Day 8
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+grid =
+  input
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.graphemes()
+    |> Enum.map(&String.to_integer/1)
+  end)
+```
+
+```elixir
+defmodule Grid do
+  # First row is always visible
+  def visible?(_grid, {0, _y}), do: true
+  # First column is always visible
+  def visible?(_grid, {_x, 0}), do: true
+
+  def visible?(grid, {x, y} = coord) do
+    case Enum.count(grid) - 1 do
+      # Last row is always visible
+      s when s == x ->
+        true
+
+      # Last column is always visible (assuming square grid)
+      s when s == y ->
+        true
+
+      # (literal) corner case :D
+      s when s == x and s == y ->
+        true
+
+      _ ->
+        row = get_row(grid, x)
+        col = get_column(grid, y)
+        size = Enum.count(grid) - 1
+
+        [
+          {row, y},
+          {Enum.reverse(row), size - y},
+          {col, x},
+          {Enum.reverse(col), size - x}
+        ]
+        |> Enum.any?(&Grid.visible_in_line?/1)
+    end
+  end
+
+  def visible_in_line?({line, index}), do: visible_in_line?(line, index, 0)
+  def visible_in_line?([target | _], 0, largest_seen), do: largest_seen - target < 0
+
+  def visible_in_line?([head | line], index, largest_seen) do
+    lg = max(head, largest_seen)
+    visible_in_line?(line, index - 1, lg)
+  end
+
+  def get_row(grid, row), do: Enum.at(grid, row)
+  def get_column(grid, col), do: grid |> Enum.zip() |> Enum.at(col) |> Tuple.to_list()
+end
+```
+
+```elixir
+size = Enum.count(grid) - 1
+
+for x <- 0..size do
+  for y <- 0..size do
+    {x, y}
+  end
+end
+|> List.flatten()
+|> Enum.map(fn coord ->
+  Grid.visible?(grid, coord)
+end)
+|> Enum.count(& &1)
+```
+
+## Part 2
+
+```elixir
+
+```
