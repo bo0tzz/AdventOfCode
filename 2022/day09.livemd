@@ -1,0 +1,147 @@
+# AoC 2022 Day 9
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Rope do
+  @moves [
+    up: {-1, 0},
+    down: {1, 0},
+    left: {0, -1},
+    right: {0, 1}
+  ]
+
+  def moves(), do: @moves
+
+  def tail_to_head_distance({tx, ty} = _tail, {hx, hy} = _head), do: {tx - hx, ty - hy}
+
+  def get_tail_move(tail, head) do
+    distance = tail_to_head_distance(tail, head)
+
+    case distance do
+      {2, y} ->
+        {1, y}
+
+      {-2, y} ->
+        {-1, y}
+
+      {x, 2} ->
+        {x, 1}
+
+      {x, -2} ->
+        {x, -1}
+
+      move ->
+        {0, 0}
+    end
+  end
+
+  def apply_move({x, y} = _pos, {dx, dy} = _move), do: {x + dx, y + dy}
+
+  def step_rope(_, 0, head, tail, tail_visits), do: {head, tail, tail_visits}
+
+  def step_rope(direction, amount, head, tail, tail_visits) do
+    new_head = apply_move(head, @moves[direction])
+    tail_move = get_tail_move(new_head, tail)
+    new_tail = apply_move(tail, tail_move)
+
+    step_rope(direction, amount - 1, new_head, new_tail, [new_tail | tail_visits])
+  end
+end
+```
+
+```elixir
+moves =
+  input
+  |> String.split("\n")
+  |> Enum.map(fn <<dir>> <> " " <> int ->
+    dir =
+      case dir do
+        ?U -> :up
+        ?D -> :down
+        ?L -> :left
+        ?R -> :right
+      end
+
+    {dir, String.to_integer(int)}
+  end)
+
+%{visited: visited} =
+  Enum.reduce(
+    moves,
+    %{head: {0, 0}, tail: {0, 0}, visited: []},
+    fn {move, amount}, %{head: head, tail: tail, visited: visited} ->
+      {head, tail, visited} = Rope.step_rope(move, amount, head, tail, visited)
+      %{head: head, tail: tail, visited: visited}
+    end
+  )
+
+visited |> Enum.uniq() |> Enum.count()
+```
+
+## Part 2
+
+```elixir
+defmodule Rope2 do
+  def update_tail(head, [last], visited) do
+    move = Rope.get_tail_move(head, last)
+    tail = Rope.apply_move(last, move)
+
+    IO.puts("Tail end moved from #{inspect(last)} to #{inspect(tail)}")
+
+    {[tail], [tail | visited]}
+  end
+
+  def update_tail(head, [current | tail], visited) do
+    move = Rope.get_tail_move(head, current)
+    new_current = Rope.apply_move(current, move)
+
+    {tail, visited} = update_tail(new_current, tail, visited)
+
+    {[new_current | tail], visited}
+  end
+
+  # TODO
+  def step_rope(_, 0, head, tail, tail_visits), do: {head, tail, tail_visits}
+
+  def step_rope(direction, amount, head, tail, tail_visits) do
+    new_head = Rope.apply_move(head, Rope.moves()[direction])
+    {tail, tail_visits} = update_tail(new_head, tail, tail_visits)
+
+    step_rope(direction, amount - 1, new_head, tail, tail_visits)
+  end
+end
+```
+
+```elixir
+tail = List.duplicate({0, 0}, 9)
+
+%{visited: visited} =
+  Enum.reduce(
+    moves,
+    %{head: {0, 0}, tail: tail, visited: []},
+    fn {move, amount}, %{head: head, tail: tail, visited: visited} ->
+      {head, tail, visited} = Rope2.step_rope(move, amount, head, tail, visited)
+      %{head: head, tail: tail, visited: visited}
+    end
+  )
+
+visited |> Enum.uniq() |> Enum.count()
+```
