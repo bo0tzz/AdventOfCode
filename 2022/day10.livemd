@@ -1,0 +1,112 @@
+# AoC 2022 Day 10
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Computer do
+  defstruct instructions: [], register: 1, cycle: 0, signal_history: []
+
+  def new(instructions), do: %Computer{instructions: instructions}
+
+  def parse_instruction("noop"), do: :noop
+  def parse_instruction("addx " <> amt), do: {:addx, String.to_integer(amt)}
+
+  def pop_instruction(%Computer{instructions: [_ | instructions]} = state),
+    do: %{state | instructions: instructions}
+
+  def next_cycle(
+        %Computer{
+          register: register,
+          cycle: cycle,
+          signal_history: signal_history
+        } = state
+      ) do
+    %{state | cycle: cycle + 1, signal_history: [(cycle + 1) * register | signal_history]}
+  end
+
+  def run_instruction(%Computer{instructions: []} = state), do: {:halt, state}
+
+  def run_instruction(%Computer{instructions: [:noop | _]} = state) do
+    state
+    |> Computer.pop_instruction()
+    |> Computer.next_cycle()
+  end
+
+  def run_instruction(%Computer{instructions: [{:addx, amt} | _]} = state) do
+    state
+    |> Computer.pop_instruction()
+    |> Computer.next_cycle()
+    |> Computer.next_cycle()
+    |> Map.update!(:register, &(&1 + amt))
+  end
+
+  def run(%Computer{} = state) do
+    state
+    |> Computer.run_instruction()
+    |> case do
+      {:halt, state} -> {:halt, state}
+      state -> Computer.run(state)
+    end
+  end
+end
+```
+
+```elixir
+state =
+  input
+  |> String.split("\n")
+  |> Enum.map(&Computer.parse_instruction/1)
+  |> Computer.new()
+
+{:halt, %{signal_history: signals} = end_state} = Computer.run(state)
+
+signals
+|> Enum.reverse()
+|> Enum.drop(19)
+|> Enum.take_every(40)
+|> Enum.take(6)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+lines =
+  signals
+  |> Enum.reverse()
+  |> Enum.with_index()
+  |> Enum.map(fn {signal, position} ->
+    register = signal / (position + 1)
+    position = Integer.mod(position, 40)
+
+    case register - position do
+      d when -1 <= d and d <= 1 -> "X"
+      _ -> "."
+    end
+  end)
+```
+
+```elixir
+lines
+|> Enum.chunk_every(40)
+|> Enum.map(&Enum.join/1)
+|> Enum.join("\n")
+|> IO.puts()
+```
