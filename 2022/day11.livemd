@@ -1,0 +1,258 @@
+# AoC 2022 Day 11
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"},
+  {:nimble_parsec, "~> 1.2"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule MonkeyParser do
+  import NimbleParsec
+
+  newline = ignore(string("\n"))
+  whitespace = ignore(repeat(string(" ")))
+  break = newline |> concat(whitespace)
+
+  identifier =
+    ignore(string("Monkey "))
+    |> integer(1)
+    |> tag(:id)
+    |> ignore(string(":"))
+
+  items =
+    ignore(string("Starting items:"))
+    |> repeat(
+      optional(whitespace)
+      |> integer(2)
+      |> optional(ignore(string(",")))
+    )
+    |> tag(:starting_items)
+
+  operation =
+    ignore(string("Operation: new = old "))
+    |> choice([
+      ignore(string("* old")) |> tag(:square),
+      ignore(string("* ")) |> integer(min: 1) |> tag(:mult),
+      ignore(string("+ ")) |> integer(min: 1) |> tag(:add)
+    ])
+    |> tag(:operation)
+
+  test =
+    ignore(string("Test: divisible by "))
+    |> integer(min: 1)
+    |> tag(:test)
+
+  if_true =
+    ignore(string("If true: throw to monkey "))
+    |> integer(1)
+    |> tag(true)
+
+  if_false =
+    ignore(string("If false: throw to monkey "))
+    |> integer(1)
+    |> tag(false)
+
+  decisions =
+    if_true
+    |> concat(break)
+    |> concat(if_false)
+    |> tag(:decisions)
+
+  monkey =
+    identifier
+    |> concat(break)
+    |> concat(items)
+    |> concat(break)
+    |> concat(operation)
+    |> concat(break)
+    |> concat(test)
+    |> concat(break)
+    |> concat(decisions)
+    |> optional(times(newline, 2))
+    |> tag(:monkey)
+
+  defparsec(:parse, repeat(monkey))
+end
+```
+
+```elixir
+{:ok, monkeys, "", _, _, _} = MonkeyParser.parse(input)
+```
+
+```elixir
+defmodule Monkey do
+  defstruct [:id, :items, :operation, :test, :decisions, :inspected]
+
+  def new(
+        id: [id],
+        starting_items: items,
+        operation: [operation],
+        test: [test],
+        decisions: decisions
+      ) do
+    %Monkey{
+      id: id,
+      items: items,
+      operation: operation,
+      test: test,
+      decisions: decisions,
+      inspected: 0
+    }
+  end
+
+  def apply_op(item, {:mult, [amt]}), do: amt * item
+  def apply_op(item, {:add, [amt]}), do: amt + item
+  def apply_op(item, {:square, []}), do: item * item
+
+  def apply_test(level, test), do: Integer.mod(level, test) == 0
+
+  def incr_inspected(%Monkey{inspected: i} = monkey), do: %{monkey | inspected: i + 1}
+
+  def pop_item(%Monkey{items: [item | items]} = monkey),
+    do: {
+      %{monkey | items: items},
+      item
+    }
+
+  def add_item(%Monkey{items: items} = monkey, item), do: %{monkey | items: items ++ [item]}
+
+  def move(%Monkey{items: []}), do: :done
+
+  def move(%Monkey{operation: operation, test: test, decisions: decisions} = monkey) do
+    {monkey, item} =
+      monkey
+      |> Monkey.incr_inspected()
+      |> Monkey.pop_item()
+
+    item =
+      item
+      |> Monkey.apply_op(operation)
+      |> Integer.floor_div(3)
+
+    [target] =
+      item
+      |> Monkey.apply_test(test)
+      |> then(&Keyword.fetch!(decisions, &1))
+
+    {monkey, item, target}
+  end
+
+  def take_turn(monkeys, id) do
+    monkeys[id]
+    |> Monkey.move()
+    |> case do
+      :done ->
+        monkeys
+
+      {monkey, item, target} ->
+        monkeys
+        |> Map.update!(target, &add_item(&1, item))
+        |> Map.replace!(id, monkey)
+        |> then(&Monkey.take_turn(&1, id))
+    end
+  end
+
+  def run_round(monkeys) do
+    ids = Map.keys(monkeys)
+
+    Enum.reduce(ids, monkeys, &Monkey.take_turn(&2, &1))
+  end
+end
+```
+
+```elixir
+monkeys =
+  monkeys
+  |> Keyword.values()
+  |> Enum.map(&Monkey.new/1)
+  |> Enum.map(&{&1.id, &1})
+  |> Enum.into(%{})
+
+1..20
+|> Enum.reduce(monkeys, fn _, acc -> Monkey.run_round(acc) end)
+|> Map.values()
+|> Enum.map(& &1.inspected)
+|> Enum.sort()
+|> Enum.reverse()
+|> Enum.take(2)
+|> Enum.product()
+```
+
+## Part 2
+
+```elixir
+defmodule Monkey2 do
+  def move(%Monkey{items: []}), do: :done
+
+  def move(%Monkey{operation: operation, test: test, decisions: decisions} = monkey) do
+    {monkey, item} =
+      monkey
+      |> Monkey.incr_inspected()
+      |> Monkey.pop_item()
+
+    item =
+      item
+      |> Monkey.apply_op(operation)
+
+    [target] =
+      item
+      |> Monkey.apply_test(test)
+      |> then(&Keyword.fetch!(decisions, &1))
+
+    {monkey, item, target}
+  end
+
+  def take_turn(monkeys, id) do
+    monkeys[id]
+    |> Monkey2.move()
+    |> case do
+      :done ->
+        monkeys
+
+      {monkey, item, target} ->
+        monkeys
+        |> Map.update!(target, &Monkey.add_item(&1, item))
+        |> Map.replace!(id, monkey)
+        |> then(&Monkey2.take_turn(&1, id))
+    end
+  end
+
+  def run_round(monkeys) do
+    ids = Map.keys(monkeys)
+
+    Enum.reduce(ids, monkeys, &Monkey2.take_turn(&2, &1))
+  end
+end
+```
+
+```elixir
+# 1..10000
+# |> Enum.reduce(monkeys, fn round, acc ->
+#   IO.puts("Round #{round}")
+#   Monkey2.run_round(acc)
+# end)
+# |> Map.values()
+# |> IO.inspect()
+# |> Enum.map(& &1.inspected)
+# |> Enum.sort()
+# |> Enum.reverse()
+# |> Enum.take(2)
+# |> Enum.product()
+
+# This takes forever to run, I can't be bothered lmao
+```
