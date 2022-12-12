@@ -85,43 +85,54 @@ heightmap =
 ```
 
 ```elixir
-defmodule Search do
-  def shortest_path(heightmap, from, to) do
-    graph = :digraph.new()
-    {dim_x, dim_y} = heightmap.dim
+graph = :digraph.new()
+{dim_x, dim_y} = heightmap.dim
 
-    for x <- 0..dim_x do
-      for y <- 0..dim_y do
-        :digraph.add_vertex(graph, {x, y})
-      end
-    end
-
-    for x <- 0..dim_x do
-      for y <- 0..dim_y do
-        {coord, _val} = point = Heightmap.get_point(heightmap, {x, y})
-
-        heightmap
-        |> Heightmap.neighbours(coord)
-        |> Enum.filter(&Heightmap.can_move(point, &1))
-        |> Enum.each(fn {target_coord, _} -> :digraph.add_edge(graph, coord, target_coord) end)
-      end
-    end
-
-    :digraph.get_short_path(graph, from, to)
-    |> case do
-      false -> false
-      path -> Enum.count(path) - 1
-    end
+for x <- 0..dim_x do
+  for y <- 0..dim_y do
+    :digraph.add_vertex(graph, {x, y})
   end
 end
-```
 
-```elixir
-Search.shortest_path(heightmap, heightmap.start_point, heightmap.end_point)
+for x <- 0..dim_x do
+  for y <- 0..dim_y do
+    {coord, _val} = point = Heightmap.get_point(heightmap, {x, y})
+
+    heightmap
+    |> Heightmap.neighbours(coord)
+    |> Enum.filter(&Heightmap.can_move(point, &1))
+    |> Enum.each(fn {target_coord, _} -> :digraph.add_edge(graph, coord, target_coord) end)
+  end
+end
+
+res = :digraph.get_short_path(graph, heightmap.start_point, heightmap.end_point) |> Enum.count()
+res - 1
 ```
 
 ## Part 2
 
 ```elixir
+has_path = :digraph_utils.reaching_neighbours([heightmap.end_point], graph) |> MapSet.new()
 
+start_point_candidates =
+  heightmap.map
+  |> Enum.filter(&match?({_, ?a}, &1))
+  |> Enum.map(&elem(&1, 0))
+  |> MapSet.new()
+
+valid_candidates = MapSet.intersection(start_point_candidates, has_path)
+
+valid_paths =
+  Enum.map(valid_candidates, fn cand ->
+    :digraph.get_short_path(graph, cand, heightmap.end_point)
+  end)
+```
+
+```elixir
+res =
+  valid_paths
+  |> Enum.map(&Enum.count/1)
+  |> Enum.min()
+
+res - 1
 ```
