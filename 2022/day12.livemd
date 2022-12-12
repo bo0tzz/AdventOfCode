@@ -1,0 +1,127 @@
+# AoC 2022 Day 12
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.7.0"},
+  {:kino_vega_lite, "~> 0.1.6"}
+])
+```
+
+## Input
+
+```elixir
+input_field = Kino.Input.textarea("Puzzle input")
+```
+
+```elixir
+input = Kino.Input.read(input_field)
+```
+
+## Part 1
+
+```elixir
+defmodule Heightmap do
+  defstruct [:map, :start_point, :end_point, :dim]
+
+  def map_char("S"), do: :start_point
+  def map_char("E"), do: :end_point
+  def map_char(<<char>>), do: char
+
+  def new(map) do
+    {start_point, _} = Enum.find(map, &match?({_, :start_point}, &1))
+    {end_point, _} = Enum.find(map, &match?({_, :end_point}, &1))
+
+    dim =
+      map
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.max()
+
+    %Heightmap{
+      map: map,
+      start_point: start_point,
+      end_point: end_point,
+      dim: dim
+    }
+  end
+
+  def neighbours(heightmap, {x, y}) do
+    [{x - 1, y}, {x + 1, y}, {x, y - 1}, {x, y + 1}]
+    |> Enum.filter(&Heightmap.in_bounds?(heightmap, &1))
+    |> Enum.map(&Heightmap.get_point(heightmap, &1))
+  end
+
+  def get_point(%Heightmap{map: map}, point), do: {point, Map.fetch!(map, point)}
+
+  def in_bounds?(%Heightmap{}, {x, y}) when x < 0 or y < 0, do: false
+  def in_bounds?(%Heightmap{dim: {dim_x, dim_y}}, {x, y}) when x > dim_x or y > dim_y, do: false
+  def in_bounds?(%Heightmap{}, _), do: true
+
+  def can_move(_from, {_, :start_point}), do: true
+  def can_move({_, :start_point}, {_, to}), do: to <= ?a + 1
+  def can_move({_, from}, {_, :end_point}), do: from >= ?z - 1
+  def can_move({_, :end_point}, _), do: false
+  def can_move({_, from}, {_, to}), do: from - to >= -1
+end
+```
+
+```elixir
+heightmap =
+  input
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.codepoints()
+    |> Enum.map(&Heightmap.map_char/1)
+  end)
+  |> Enum.with_index()
+  |> Enum.reduce(%{}, fn {line, y}, acc ->
+    line
+    |> Enum.with_index()
+    |> Enum.map(fn {item, x} -> {{x, y}, item} end)
+    |> Enum.into(%{})
+    |> Map.merge(acc)
+  end)
+  |> Heightmap.new()
+```
+
+```elixir
+defmodule Search do
+  def shortest_path(heightmap, from, to) do
+    graph = :digraph.new()
+    {dim_x, dim_y} = heightmap.dim
+
+    for x <- 0..dim_x do
+      for y <- 0..dim_y do
+        :digraph.add_vertex(graph, {x, y})
+      end
+    end
+
+    for x <- 0..dim_x do
+      for y <- 0..dim_y do
+        {coord, _val} = point = Heightmap.get_point(heightmap, {x, y})
+
+        heightmap
+        |> Heightmap.neighbours(coord)
+        |> Enum.filter(&Heightmap.can_move(point, &1))
+        |> Enum.each(fn {target_coord, _} -> :digraph.add_edge(graph, coord, target_coord) end)
+      end
+    end
+
+    :digraph.get_short_path(graph, from, to)
+    |> case do
+      false -> false
+      path -> Enum.count(path) - 1
+    end
+  end
+end
+```
+
+```elixir
+Search.shortest_path(heightmap, heightmap.start_point, heightmap.end_point)
+```
+
+## Part 2
+
+```elixir
+
+```
