@@ -197,9 +197,9 @@ monkeys =
 
 ```elixir
 defmodule Monkey2 do
-  def move(%Monkey{items: []}), do: :done
+  def move(%Monkey{items: []}, _), do: :done
 
-  def move(%Monkey{operation: operation, test: test, decisions: decisions} = monkey) do
+  def move(%Monkey{operation: operation, test: test, decisions: decisions} = monkey, divisor) do
     {monkey, item} =
       monkey
       |> Monkey.incr_inspected()
@@ -208,6 +208,7 @@ defmodule Monkey2 do
     item =
       item
       |> Monkey.apply_op(operation)
+      |> Integer.mod(divisor)
 
     [target] =
       item
@@ -217,9 +218,9 @@ defmodule Monkey2 do
     {monkey, item, target}
   end
 
-  def take_turn(monkeys, id) do
+  def take_turn(monkeys, id, divisor) do
     monkeys[id]
-    |> Monkey2.move()
+    |> Monkey2.move(divisor)
     |> case do
       :done ->
         monkeys
@@ -228,31 +229,35 @@ defmodule Monkey2 do
         monkeys
         |> Map.update!(target, &Monkey.add_item(&1, item))
         |> Map.replace!(id, monkey)
-        |> then(&Monkey2.take_turn(&1, id))
+        |> then(&Monkey2.take_turn(&1, id, divisor))
     end
   end
 
-  def run_round(monkeys) do
+  def run_round(monkeys, divisor) do
     ids = Map.keys(monkeys)
 
-    Enum.reduce(ids, monkeys, &Monkey2.take_turn(&2, &1))
+    Enum.reduce(ids, monkeys, &Monkey2.take_turn(&2, &1, divisor))
   end
 end
 ```
 
 ```elixir
-# 1..10000
-# |> Enum.reduce(monkeys, fn round, acc ->
-#   IO.puts("Round #{round}")
-#   Monkey2.run_round(acc)
-# end)
-# |> Map.values()
-# |> IO.inspect()
-# |> Enum.map(& &1.inspected)
-# |> Enum.sort()
-# |> Enum.reverse()
-# |> Enum.take(2)
-# |> Enum.product()
+divisor =
+  monkeys
+  |> Map.values()
+  |> Enum.map(& &1.test)
+  |> Enum.product()
+```
 
-# This takes forever to run, I can't be bothered lmao
+```elixir
+1..10000
+|> Enum.reduce(monkeys, fn round, acc ->
+  Monkey2.run_round(acc, divisor)
+end)
+|> Map.values()
+|> Enum.map(& &1.inspected)
+|> Enum.sort()
+|> Enum.reverse()
+|> Enum.take(2)
+|> Enum.product()
 ```
