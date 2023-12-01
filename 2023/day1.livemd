@@ -43,16 +43,16 @@ end)
 ```elixir
 defmodule Parser do
   def parse_num(""), do: :end
-  def parse_num("zero" <> rest), do: {0, rest}
-  def parse_num("one" <> rest), do: {1, rest}
-  def parse_num("two" <> rest), do: {2, rest}
-  def parse_num("three" <> rest), do: {3, rest}
-  def parse_num("four" <> rest), do: {4, rest}
-  def parse_num("five" <> rest), do: {5, rest}
-  def parse_num("six" <> rest), do: {6, rest}
-  def parse_num("seven" <> rest), do: {7, rest}
-  def parse_num("eight" <> rest), do: {8, rest}
-  def parse_num("nine" <> rest), do: {9, rest}
+  def parse_num("zero" <> rest), do: {0, "ero" <> rest}
+  def parse_num("one" <> rest), do: {1, "ne" <> rest}
+  def parse_num("two" <> rest), do: {2, "wo" <> rest}
+  def parse_num("three" <> rest), do: {3, "hree" <> rest}
+  def parse_num("four" <> rest), do: {4, "our" <> rest}
+  def parse_num("five" <> rest), do: {5, "ive" <> rest}
+  def parse_num("six" <> rest), do: {6, "ix" <> rest}
+  def parse_num("seven" <> rest), do: {7, "even" <> rest}
+  def parse_num("eight" <> rest), do: {8, "ight" <> rest}
+  def parse_num("nine" <> rest), do: {9, "ine" <> rest}
   def parse_num("0" <> rest), do: {0, rest}
   def parse_num("1" <> rest), do: {1, rest}
   def parse_num("2" <> rest), do: {2, rest}
@@ -98,4 +98,4 @@ end)
 |> Enum.sum()
 ```
 
-<!-- livebook:{"offset":2436,"stamp":{"token":"XCP.7W5O9ANdn_EAK1sk7VfIYn8Le71Xwi8BVCTyA_-M4MreTK9mXLWDx9dflB8MeF_4japMk1u8AxRlbOyGCB5KMNrMbW3zM1qCKQanXNShaq-A0LeT7S-kDnOJQ3A","version":2}} -->
+<!-- livebook:{"offset":2526,"stamp":{"token":"XCP.g9q9jWtAv1vJdWOxRjoYy7ZhKIOmIlYoGCOZ_x8RAUGIjfF_HE9XQvGdaZ4U-A7eL-eol5m6wDPt7dJGu96Y1q21Sz1IXp2FiI5Ahja9BZ_BKNGI1-YFcgITdew","version":2}} -->
