@@ -38,3 +38,64 @@ end)
 |> Enum.sum()
 ```
 
+## Part 2
+
+```elixir
+defmodule Parser do
+  def parse_num(""), do: :end
+  def parse_num("zero" <> rest), do: {0, rest}
+  def parse_num("one" <> rest), do: {1, rest}
+  def parse_num("two" <> rest), do: {2, rest}
+  def parse_num("three" <> rest), do: {3, rest}
+  def parse_num("four" <> rest), do: {4, rest}
+  def parse_num("five" <> rest), do: {5, rest}
+  def parse_num("six" <> rest), do: {6, rest}
+  def parse_num("seven" <> rest), do: {7, rest}
+  def parse_num("eight" <> rest), do: {8, rest}
+  def parse_num("nine" <> rest), do: {9, rest}
+  def parse_num("0" <> rest), do: {0, rest}
+  def parse_num("1" <> rest), do: {1, rest}
+  def parse_num("2" <> rest), do: {2, rest}
+  def parse_num("3" <> rest), do: {3, rest}
+  def parse_num("4" <> rest), do: {4, rest}
+  def parse_num("5" <> rest), do: {5, rest}
+  def parse_num("6" <> rest), do: {6, rest}
+  def parse_num("7" <> rest), do: {7, rest}
+  def parse_num("8" <> rest), do: {8, rest}
+  def parse_num("9" <> rest), do: {9, rest}
+  def parse_num(<<_::binary-size(1)>> <> rest), do: {:discard, rest}
+
+  def parse_line(line) do
+    parse_line(line, [])
+  end
+
+  def parse_line(line, acc) do
+    line
+    |> parse_num()
+    |> case do
+      :end -> Enum.reverse(acc)
+      {:discard, rest} -> parse_line(rest, acc)
+      {n, rest} -> parse_line(rest, [n | acc])
+    end
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+puzzle_input
+|> String.split("\n")
+|> Enum.map(&Parser.parse_line/1)
+|> Enum.map(fn
+  [n] -> {n, n}
+  [n, m] -> {n, m}
+  [n | list] -> {n, List.last(list)}
+end)
+|> Enum.map(fn {n, m} ->
+  "#{n}#{m}" |> String.to_integer()
+end)
+|> Enum.sum()
+```
+
+<!-- livebook:{"offset":2436,"stamp":{"token":"XCP.7W5O9ANdn_EAK1sk7VfIYn8Le71Xwi8BVCTyA_-M4MreTK9mXLWDx9dflB8MeF_4japMk1u8AxRlbOyGCB5KMNrMbW3zM1qCKQanXNShaq-A0LeT7S-kDnOJQ3A","version":2}} -->
