@@ -1,0 +1,30 @@
+# AoC 2023 Template
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"1","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "1", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+## Part 1
+
+```elixir
+puzzle_input
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":472,"stamp":{"token":"XCP.CNXjHntdMbuJGjwX-KI6Pg27UtpFhUYdXwxcSUSAG6ReqSEIT3boiz4zL3ZkyuX3F6qSjlF3FsxhEnyXPk2bqjRrNueqbQ-2uvPnzmOHLBHeegRyKY8b3VIHPHU","version":2}} -->
