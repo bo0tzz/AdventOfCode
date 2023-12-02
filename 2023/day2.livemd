@@ -78,16 +78,6 @@ defmodule CubeGame do
 end
 ```
 
-```elixir
-puzzle_input = """
-Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-"""
-```
-
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
@@ -97,7 +87,30 @@ games = CubeGame.parse_input(puzzle_input)
 ## Part 1
 
 ```elixir
-puzzle_input
+limits = %{
+  "red" => 12,
+  "green" => 13,
+  "blue" => 14
+}
+
+amount_under_limit? = fn {n, colour} ->
+  limits[colour] >= n
+end
+
+set_possible? = fn set ->
+  Enum.all?(set, amount_under_limit?)
+end
+
+game_possible? = fn %CubeGame{sets: sets} ->
+  Enum.all?(sets, set_possible?)
+end
+```
+
+```elixir
+games
+|> Enum.filter(game_possible?)
+|> Enum.map(&Map.get(&1, :id))
+|> Enum.sum()
 ```
 
 ## Part 2
@@ -106,4 +119,4 @@ puzzle_input
 
 ```
 
-<!-- livebook:{"offset":2032,"stamp":{"token":"XCP.3NnJfPdfw9cex_4V8ocZIBgYvS195aatiQD5dMrgVxbm5_qqVmhUng9uR2hJ9TcNZEi4SnUbX6W4cdCJhDvEqjDBeIPXrJdfbEFhNaAvSGNchcbkvnr1cBveS5c","version":2}} -->
+<!-- livebook:{"offset":2037,"stamp":{"token":"XCP.Il577gazh0LagrdOGIoT0JY-fIMW7qIh40PunshecC5Huvs0H7KewsJiqzIz_DYjFwmwZ6Z3rSld7QaY6zI2B-BMKUY4OHm66pIdY7JrlXV5kfzWuGBIrKv0yYk","version":2}} -->
