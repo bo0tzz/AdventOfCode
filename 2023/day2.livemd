@@ -66,7 +66,8 @@ defmodule CubeGame do
       sets =
         Keyword.get_values(g, :set)
         |> Enum.map(fn s ->
-          Keyword.get_values(s, :cubes) |> Enum.map(&List.to_tuple/1)
+          Keyword.get_values(s, :cubes)
+          |> Enum.map(fn [n, name] -> {String.to_atom(name), n} end)
         end)
 
       %CubeGame{
@@ -88,12 +89,12 @@ games = CubeGame.parse_input(puzzle_input)
 
 ```elixir
 limits = %{
-  "red" => 12,
-  "green" => 13,
-  "blue" => 14
+  red: 12,
+  green: 13,
+  blue: 14
 }
 
-amount_under_limit? = fn {n, colour} ->
+amount_under_limit? = fn {colour, n} ->
   limits[colour] >= n
 end
 
@@ -116,7 +117,22 @@ games
 ## Part 2
 
 ```elixir
-
+games
+|> Enum.map(&Map.get(&1, :sets))
+|> Enum.map(fn sets ->
+  sets
+  |> List.flatten()
+  |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+  |> Enum.map(fn {colour, counts} ->
+    {colour, Enum.max(counts)}
+  end)
+end)
+|> Enum.map(fn maximums ->
+  maximums
+  |> Keyword.values()
+  |> Enum.product()
+end)
+|> Enum.sum()
 ```
 
-<!-- livebook:{"offset":2037,"stamp":{"token":"XCP.Il577gazh0LagrdOGIoT0JY-fIMW7qIh40PunshecC5Huvs0H7KewsJiqzIz_DYjFwmwZ6Z3rSld7QaY6zI2B-BMKUY4OHm66pIdY7JrlXV5kfzWuGBIrKv0yYk","version":2}} -->
+<!-- livebook:{"offset":2378,"stamp":{"token":"XCP._OHovPqRY_4OY09lOzmhg6rpU-QoGpSS-OA867kLlipA4cvHYQOjyETREYfrItRjCk4KpQ7MEbv3s5oIg9GWGF1iygd4bU-a0q5CR-wA6VP9b595zpAWBkZKnDg","version":2}} -->
