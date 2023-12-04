@@ -43,6 +43,17 @@ defmodule ScratchCard do
     }
   end
 
+  def matches(%ScratchCard{has: has, winning: winning}) do
+    MapSet.intersection(winning, has)
+    |> Enum.count()
+  end
+
+  def points(%ScratchCard{} = card) do
+    card
+    |> matches()
+    |> points()
+  end
+
   def points(0), do: 0
   def points(1), do: 1
 
@@ -58,10 +69,6 @@ end
 puzzle_input
 |> String.split("\n")
 |> Enum.map(&ScratchCard.parse/1)
-|> Enum.map(fn card ->
-  MapSet.intersection(card.winning, card.has)
-end)
-|> Enum.map(&Enum.count/1)
 |> Enum.map(&ScratchCard.points/1)
 |> Enum.sum()
 ```
@@ -69,7 +76,38 @@ end)
 ## Part 2
 
 ```elixir
+cards =
+  puzzle_input
+  |> String.split("\n")
+  |> Enum.map(&ScratchCard.parse/1)
 
+lookup = Map.new(cards, fn c -> {c.id, c} end)
 ```
 
-<!-- livebook:{"offset":1425,"stamp":{"token":"XCP.-AyC7cmqy-0zzeQENkAwISdUaJkmD9BhYquUyKF26CVvGtAqZROnykateGyO89HAAtgpNyu5cUkgSEnnokbmfjzdasFFlqknwuSdquvOyY_XLbF9lEmpezhHTUc","version":2}} -->
+```elixir
+defmodule Evaluator do
+  def evaluate(cards, lookup), do: evaluate(cards, lookup, 0)
+
+  def evaluate([], _, seen), do: seen
+
+  def evaluate([card | cards], lookup, seen) do
+    n = ScratchCard.matches(card)
+    cards = new_cards(lookup, card.id, n) ++ cards
+    evaluate(cards, lookup, seen + 1)
+  end
+
+  def new_cards(_, _, 0), do: []
+
+  def new_cards(lookup, id, n) do
+    from = id + 1
+    to = from + n - 1
+    from..to |> Enum.map(&Map.get(lookup, &1))
+  end
+end
+```
+
+```elixir
+Evaluator.evaluate(cards, lookup)
+```
+
+<!-- livebook:{"offset":2198,"stamp":{"token":"XCP.ACHW-Xmf-P5-rGBDJtuzB0psjOeCX-YmUi3fIxrbnlv0lpOAYrDKVpwQGgfRQbhL2YgMKmzqnlPxNWhWW_8u--fkaaGhtgEaEROuPZBBgTRbnDf8B9ayvWURrgA","version":2}} -->
