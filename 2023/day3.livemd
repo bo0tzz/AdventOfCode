@@ -1,0 +1,81 @@
+# AoC 2023 Day 3
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"3","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "3", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+## Parsing
+
+```elixir
+puzzle_input =
+  """
+  467..114..
+  ...*......
+  ..35..633.
+  ......#...
+  617*......
+  .....+.58.
+  ..592.....
+  ......755.
+  ...$.*....
+  .664.598..
+  """
+  |> String.trim()
+```
+
+```elixir
+def parse_lookahead(x, acc) do
+end
+```
+
+```elixir
+lines = String.split(puzzle_input, "\n")
+
+column_count = lines |> List.first() |> String.length()
+line_count = Enum.count(lines)
+
+grid =
+  lines
+  |> Enum.map(&String.codepoints/1)
+
+for y <- 0..(line_count - 1), x <- 0..(column_count - 1), reduce: %{} do
+  acc ->
+    char =
+      grid
+      |> Enum.at(y)
+      |> Enum.at(x)
+
+    # case char do
+    #   c when c in ?0..?9 -> 
+    # end
+end
+```
+
+```elixir
+Integer.parse("foo123")
+```
+
+## Part 1
+
+```elixir
+puzzle_input
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":1167,"stamp":{"token":"XCP.f71gICiLFeYO1YaY2OL-KC-zFx5DglkISW_HJR83Dj72Qw13SIbK2FRc2d0EcR-1JicgjDFbzIHoGPyC2TcmctQlklwHQcHgkvnw7wXocPLfwDv4f63CrDqBaHk","version":2}} -->
