@@ -186,7 +186,25 @@ Almanac.resolve(parsed) |> Enum.min()
 ## Part 2
 
 ```elixir
-
+resolve_range = fn range, almanac ->
+  range
+  |> Stream.map(fn n ->
+    [res] = Almanac.resolve("seed", [n], almanac.mappings)
+    res
+  end)
+  |> Enum.min()
+end
 ```
 
-<!-- livebook:{"offset":3351,"stamp":{"token":"XCP._K8NQ9jYIb2o6mM95cbPDrx4M-Au3zFbkOsbYwlFTqVVVsQx9ovMigflzqkqQ0PvtSoomAXZ9PBZ1-b_32LwB5GiaCbO9t_RyL3V4J8ltrTX0F8zHioXi3lufWs","version":2}} -->
+Just bruteforce across all cores. This took 2.5 hours to finish on my system :)
+
+```elixir
+parsed.seeds
+|> Stream.chunk_every(2)
+|> Stream.map(fn [f, t] -> Range.new(f, f + t - 1) end)
+|> Task.async_stream(&resolve_range.(&1, parsed), ordered: false, timeout: :infinity)
+|> Stream.map(fn {:ok, n} -> n end)
+|> Enum.min()
+```
+
+<!-- livebook:{"offset":3839,"stamp":{"token":"XCP.K3Su5rJPnhFXeS1LdX5qIopNcqcwuUQnczzq4owU4UWd5Qp8l8XLWLVYsF7Vh6C2Iu7uvufKCgxVxE0UY0hHj6dNXbihB6Z2mRs75wMMDkAM1iqOFvC3fWuEkyU","version":2}} -->
