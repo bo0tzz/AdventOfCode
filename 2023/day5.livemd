@@ -1,0 +1,192 @@
+# AoC 2023 Day 5
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"},
+  {:nimble_parsec, "~> 1.4"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"5","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "5", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+```elixir
+# puzzle_input = """
+# seeds: 79 14 55 13
+
+# seed-to-soil map:
+# 50 98 2
+# 52 50 48
+
+# soil-to-fertilizer map:
+# 0 15 37
+# 37 52 2
+# 39 0 15
+
+# fertilizer-to-water map:
+# 49 53 8
+# 0 11 42
+# 42 0 7
+# 57 7 4
+
+# water-to-light map:
+# 88 18 7
+# 18 25 70
+
+# light-to-temperature map:
+# 45 77 23
+# 81 45 19
+# 68 64 13
+
+# temperature-to-humidity map:
+# 0 69 1
+# 1 0 69
+
+# humidity-to-location map:
+# 60 56 37
+# 56 93 4
+# """ |> String.trim()
+```
+
+## Parsing
+
+```elixir
+defmodule Almanac.Parser do
+  import NimbleParsec
+
+  ignore_literal = fn text ->
+    text |> string() |> ignore()
+  end
+
+  tagged_word = fn t ->
+    ascii_string([?a..?z], min: 1) |> tag(t)
+  end
+
+  newline = ignore(string("\n"))
+  space = ignore(string(" "))
+  number = integer(min: 1)
+
+  seeds =
+    ignore_literal.("seeds:")
+    |> times(concat(space, number), min: 1)
+    |> tag(:seeds)
+
+  map_header =
+    tagged_word.(:from)
+    |> concat(ignore_literal.("-to-"))
+    |> concat(tagged_word.(:to))
+    |> concat(ignore_literal.(" map:"))
+    |> concat(newline)
+    |> tag(:header)
+
+  map_line =
+    concat(number, optional(space))
+    |> times(3)
+    |> concat(optional(newline))
+    |> tag(:line)
+
+  map =
+    map_header
+    |> repeat(map_line)
+    |> optional(newline)
+    |> tag(:map)
+
+  almanac =
+    seeds
+    |> times(newline, 2)
+    |> repeat(map)
+
+  defparsec(:parse, almanac)
+end
+```
+
+```elixir
+defmodule Almanac do
+  defstruct [:seeds, :mappings]
+
+  def parse(input) do
+    {:ok, parsed, "", _, _, _} = Almanac.Parser.parse(input)
+
+    mappings =
+      parsed
+      |> Keyword.get_values(:map)
+      |> Enum.map(&parse_mapping/1)
+
+    %Almanac{
+      seeds: parsed[:seeds],
+      mappings: mappings
+    }
+  end
+
+  defp parse_mapping(mapping) do
+    [from: [from], to: [to]] = mapping[:header]
+
+    ranges =
+      Keyword.get_values(mapping, :line)
+      |> Enum.map(fn [dest, src, length] ->
+        range = src..(src + length - 1)
+        offset = dest - src
+
+        %{
+          range: range,
+          offset: offset
+        }
+      end)
+
+    %{
+      from: from,
+      to: to,
+      ranges: ranges
+    }
+  end
+
+  def map_number(ranges, number) do
+    ranges
+    |> Enum.find(fn %{range: range} -> number in range end)
+    |> case do
+      nil -> number
+      %{offset: offset} -> number + offset
+    end
+  end
+
+  def next_mapping(mappings, from) do
+    Enum.find(mappings, &match?(%{from: ^from}, &1))
+  end
+
+  def resolve(%Almanac{seeds: seeds, mappings: mappings}) do
+    resolve("seed", seeds, mappings)
+  end
+
+  def resolve("location", numbers, _), do: numbers
+
+  def resolve(from, numbers, mappings) do
+    mapping = next_mapping(mappings, from)
+    new_numbers = Enum.map(numbers, &map_number(mapping.ranges, &1))
+    resolve(mapping.to, new_numbers, mappings)
+  end
+end
+```
+
+```elixir
+parsed = Almanac.parse(puzzle_input)
+```
+
+## Part 1
+
+```elixir
+Almanac.resolve(parsed) |> Enum.min()
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":3351,"stamp":{"token":"XCP._K8NQ9jYIb2o6mM95cbPDrx4M-Au3zFbkOsbYwlFTqVVVsQx9ovMigflzqkqQ0PvtSoomAXZ9PBZ1-b_32LwB5GiaCbO9t_RyL3V4J8ltrTX0F8zHioXi3lufWs","version":2}} -->
