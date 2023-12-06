@@ -33,8 +33,8 @@ The problem can be reduced to a quadratic inequality:
 
 $$
 \begin{cases}
-y = -x^2 + tx \\
-y > m
+distance(x) = -x^2 + tx \\
+distance(x) > m
 \end{cases}
 $$
 
