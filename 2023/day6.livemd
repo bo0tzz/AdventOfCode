@@ -30,6 +30,7 @@ races = Enum.zip(times, distances)
 ## Part 1
 
 The problem can be reduced to a quadratic inequality:
+
 $$
 \begin{cases}
 y = -x^2 + tx \\
