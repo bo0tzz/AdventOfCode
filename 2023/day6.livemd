@@ -1,0 +1,77 @@
+# AoC 2023 Day 6
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"6","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "6", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+```elixir
+# puzzle_input = """
+# Time:      7  15   30
+# Distance:  9  40  200
+# """ |> String.trim()
+```
+
+```elixir
+[times, distances] = String.split(puzzle_input, "\n")
+
+[_ | times] = String.split(times)
+[_ | distances] = String.split(distances)
+
+times = Enum.map(times, &String.to_integer/1)
+distances = Enum.map(distances, &String.to_integer/1)
+
+races = Enum.zip(times, distances)
+```
+
+## Part 1
+
+The problem can be reduced to a quadratic inequality:
+
+```
+y = -x^2 + tx
+y > m
+```
+
+I don't believe it's feasible to solve this with some math programming magic, so I'll just do it iteratively.
+
+```elixir
+distance = fn x, t -> -(x * x) + t * x end
+
+resolve_race = fn {t, m} ->
+  hold_times = 0..t
+
+  for y <- hold_times,
+      travelled = distance.(y, t),
+      travelled > m do
+    y
+  end
+end
+```
+
+```elixir
+races
+|> Enum.map(fn race ->
+  resolve_race.(race)
+  |> Enum.count()
+end)
+|> Enum.product()
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":1338,"stamp":{"token":"XCP.zK6uOQ0CnIMwLQfaFgsSyY_5I7LQ3x-B4mAF-zT2v5xZo695svd6LGHLMnN3sLqx4Pwc_svpUlaVSep5-Q2b1EoTYFRPPR4P42ON5cwSWRGucge3oG2dj0xR9fw","version":2}} -->
