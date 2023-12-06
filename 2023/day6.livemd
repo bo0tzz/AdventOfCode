@@ -16,20 +16,13 @@ Mix.install([
 ```
 
 ```elixir
-# puzzle_input = """
-# Time:      7  15   30
-# Distance:  9  40  200
-# """ |> String.trim()
-```
-
-```elixir
 [times, distances] = String.split(puzzle_input, "\n")
 
-[_ | times] = String.split(times)
-[_ | distances] = String.split(distances)
+[_ | str_times] = String.split(times)
+[_ | str_distances] = String.split(distances)
 
-times = Enum.map(times, &String.to_integer/1)
-distances = Enum.map(distances, &String.to_integer/1)
+times = Enum.map(str_times, &String.to_integer/1)
+distances = Enum.map(str_distances, &String.to_integer/1)
 
 races = Enum.zip(times, distances)
 ```
@@ -37,41 +30,73 @@ races = Enum.zip(times, distances)
 ## Part 1
 
 The problem can be reduced to a quadratic inequality:
-
-```
-y = -x^2 + tx
+$$
+\begin{cases}
+y = -x^2 + tx \\
 y > m
-```
+\end{cases}
+$$
 
-I don't believe it's feasible to solve this with some math programming magic, so I'll just do it iteratively.
+We don't care about all the numbers, just the range higher than the minimal distance m. We can calculate the intersection points with m using the quadratic formula:
+
+$$
+x = \frac{-t \pm \sqrt{t^2-4m}}{-2}
+$$
+
+In some cases, the intersection lands exactly so that $distance(x) = m$. Since we need to complete $distance \gt m$, we special case that to return $x + 1$.
 
 ```elixir
-distance = fn x, t -> -(x * x) + t * x end
+defmodule Race do
+  def distance(h, t) do
+    -(h * h) + t * h
+  end
 
-resolve_race = fn {t, m} ->
-  hold_times = 0..t
+  def calculate(:low, t, m) do
+    h = (-t + :math.sqrt(t * t - 4 * m)) / -2
 
-  for y <- hold_times,
-      travelled = distance.(y, t),
-      travelled > m do
-    y
+    case round(distance(h, t)) do
+      ^m -> h + 1
+      _ -> h
+    end
+  end
+
+  def calculate(:high, t, m) do
+    h = (-t - :math.sqrt(t * t - 4 * m)) / -2
+
+    case round(distance(h, t)) do
+      ^m -> h - 1
+      _ -> h
+    end
+  end
+
+  def range({t, m}) do
+    low = calculate(:low, t, m) |> :math.floor()
+    high = calculate(:high, t, m) |> :math.ceil()
+    {low, high}
+  end
+
+  def option_count(race) do
+    {low, high} = range(race)
+    round(high - low + 1)
   end
 end
 ```
 
 ```elixir
 races
-|> Enum.map(fn race ->
-  resolve_race.(race)
-  |> Enum.count()
-end)
+|> Enum.map(&Race.option_count/1)
 |> Enum.product()
 ```
 
 ## Part 2
 
 ```elixir
+race = {
+  str_times |> Enum.join() |> String.to_integer(),
+  str_distances |> Enum.join() |> String.to_integer()
+}
 
+Race.option_count(race)
 ```
 
-<!-- livebook:{"offset":1338,"stamp":{"token":"XCP.zK6uOQ0CnIMwLQfaFgsSyY_5I7LQ3x-B4mAF-zT2v5xZo695svd6LGHLMnN3sLqx4Pwc_svpUlaVSep5-Q2b1EoTYFRPPR4P42ON5cwSWRGucge3oG2dj0xR9fw","version":2}} -->
+<!-- livebook:{"offset":2071,"stamp":{"token":"XCP.IeYfSKTbpq1QVQbo4T4L9DXbk56DLDBvu1Vtq59ZS9x6DUFW_EF4LjOabMdKEV_9FZfeZ2y-dmMpe_RAhPmr8wT9iBA146koPAjRHA6kCm4IF7ZkuwOkYwGbTNM","version":2}} -->
