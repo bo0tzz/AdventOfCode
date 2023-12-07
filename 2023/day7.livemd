@@ -1,0 +1,105 @@
+# AoC 2023 Day 7
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"7","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "7", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+## Parsing
+
+```elixir
+defmodule Hand do
+  defstruct [:cards, :bid]
+
+  def parse(<<cards::binary-size(5)>> <> " " <> bid) do
+    %Hand{
+      cards: map_cards(cards),
+      bid: String.to_integer(bid)
+    }
+  end
+
+  def map_cards(cards) do
+    cards
+    |> String.codepoints()
+    |> Enum.map(&map_card/1)
+  end
+
+  def map_card("T"), do: 10
+  def map_card("J"), do: 11
+  def map_card("Q"), do: 12
+  def map_card("K"), do: 13
+  def map_card("A"), do: 14
+  def map_card(num), do: String.to_integer(num)
+
+  def type(%Hand{cards: cards}) do
+    sets =
+      cards
+      |> Enum.sort()
+      |> Enum.chunk_by(& &1)
+      |> Enum.sort_by(&length/1, :desc)
+
+    case sets do
+      # Five of a kind
+      [l] when length(l) == 5 -> 5
+      # Four of a kind
+      [l | _] when length(l) == 4 -> 4
+      # Full house
+      [l, m | _] when length(l) == 3 and length(m) == 2 -> 3
+      # Three of a kind 
+      [l | _] when length(l) == 3 -> 2
+      # Two pair
+      [l, m | _] when length(l) == 2 and length(m) == 2 -> 1
+      # One pair
+      [l | _] when length(l) == 2 -> 0
+      # High card
+      _ -> -1
+    end
+  end
+
+  def compare(a, b) do
+    a_type = type(a)
+    b_type = type(b)
+
+    Enum.zip([a_type | a.cards], [b_type | b.cards])
+    |> compare()
+  end
+
+  def compare([{same, same} | rest]), do: compare(rest)
+  def compare([{a, b} | rest]), do: a < b
+end
+```
+
+```elixir
+hands =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&Hand.parse/1)
+```
+
+## Part 1
+
+```elixir
+hands
+|> Enum.sort(&Hand.compare/2)
+|> Enum.with_index(1)
+|> Enum.map(fn {%Hand{bid: bid}, i} -> bid * i end)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":2045,"stamp":{"token":"XCP.4TEDI42zkjemYdQOSHmf0xS92FHMQiajGKL9bFmBE30MO-wtQJ8T0kPVV6O4YX183-ljAeCIjyG3Alf89MjNL7hlAjdW5ycE15tYKwFPHHJGP0b4TytkY0IZmS0","version":2}} -->

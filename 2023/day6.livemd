@@ -30,7 +30,6 @@ races = Enum.zip(times, distances)
 ## Part 1
 
 The problem can be reduced to a quadratic inequality:
-
 $$
 \begin{cases}
 y = -x^2 + tx \\
@@ -100,4 +99,4 @@ race = {
 Race.option_count(race)
 ```
 
-<!-- livebook:{"offset":2071,"stamp":{"token":"XCP.IeYfSKTbpq1QVQbo4T4L9DXbk56DLDBvu1Vtq59ZS9x6DUFW_EF4LjOabMdKEV_9FZfeZ2y-dmMpe_RAhPmr8wT9iBA146koPAjRHA6kCm4IF7ZkuwOkYwGbTNM","version":2}} -->
+<!-- livebook:{"offset":2071,"stamp":{"token":"XCP.1-9uOSncPnAkl2nRvHgHWEnEqeJqr77Vk1yO6e5CLr5Fj8kRVxa26CFW4miCB8moXBdh3XlqgbSeJ281_tyfU5cujyKTyqGbc5U2R60OthrpSfyjhhxmnaNU-pI","version":2}} -->
