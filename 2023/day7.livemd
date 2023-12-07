@@ -99,7 +99,87 @@ hands
 ## Part 2
 
 ```elixir
+defmodule HandWithJokers do
+  def parse(<<cards::binary-size(5)>> <> " " <> bid) do
+    %Hand{
+      cards: map_cards(cards),
+      bid: String.to_integer(bid)
+    }
+  end
 
+  def map_cards(cards) do
+    cards
+    |> String.codepoints()
+    |> Enum.map(&map_card/1)
+  end
+
+  def map_card("T"), do: 10
+  def map_card("J"), do: 1
+  def map_card("Q"), do: 11
+  def map_card("K"), do: 12
+  def map_card("A"), do: 13
+  def map_card(num), do: String.to_integer(num)
+
+  def type(%Hand{cards: cards}) do
+    sets =
+      cards
+      |> Enum.sort()
+      |> Enum.chunk_by(& &1)
+      |> Enum.sort_by(&length/1, :desc)
+
+    jokers = Enum.count(cards, &(&1 == 1))
+
+    sets_type(sets, jokers)
+  end
+
+  # This is not quite right
+  def sets_type(sets, jokers) do
+    case sets do
+      # When the largest set is jokers
+      [[1 | _] | rest] -> sets_type(rest, jokers)
+      # Five of a kind
+      [l | _] when length(l) + jokers >= 5 -> 5
+      # Four of a kind
+      [l | _] when length(l) + jokers >= 4 -> 4
+      # Full house
+      [l, m | _] when length(l) + length(m) + jokers >= 5 -> 3
+      # Three of a kind 
+      [l | _] when length(l) + jokers >= 3 -> 2
+      # Two pair
+      [l, m | _] when length(l) + length(m) + jokers >= 2 -> 1
+      # One pair
+      [l | _] when length(l) + jokers >= 2 -> 0
+      # High card
+      _ -> -1
+    end
+  end
+
+  def compare(a, b) do
+    a_type = type(a)
+    b_type = type(b)
+
+    Enum.zip([a_type | a.cards], [b_type | b.cards])
+    |> compare()
+  end
+
+  def compare([{same, same} | rest]), do: compare(rest)
+  def compare([{a, b} | _]), do: a < b
+end
 ```
 
-<!-- livebook:{"offset":2045,"stamp":{"token":"XCP.4TEDI42zkjemYdQOSHmf0xS92FHMQiajGKL9bFmBE30MO-wtQJ8T0kPVV6O4YX183-ljAeCIjyG3Alf89MjNL7hlAjdW5ycE15tYKwFPHHJGP0b4TytkY0IZmS0","version":2}} -->
+```elixir
+hands =
+  puzzle_input
+  |> String.split("\n", trim: true)
+  |> Enum.map(&HandWithJokers.parse/1)
+```
+
+```elixir
+hands
+|> Enum.sort(&HandWithJokers.compare/2)
+|> Enum.with_index(1)
+|> Enum.map(fn {%Hand{bid: bid}, i} -> bid * i end)
+|> Enum.sum()
+```
+
+<!-- livebook:{"offset":3892,"stamp":{"token":"XCP.e7W3HI2fGA3h0BmJ3lFTJEWB_5gMOmZbtRhl1g3IXlOwLjLnmfiw4XsNrX0uDln6Bpa8SxTJv1GAwYHuE8Zn1JsE-Q6frAK3eGcIHpdBRPaehyOEURcucHPpE1I","version":2}} -->
