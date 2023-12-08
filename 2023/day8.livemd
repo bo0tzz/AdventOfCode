@@ -47,27 +47,48 @@ nodes =
 ## Part 1
 
 ```elixir
-acc = %{
-  current: "AAA",
-  count: 0
-}
+start = "AAA"
 
-Stream.cycle(steps)
-|> Enum.reduce_while(acc, fn
-  _, %{current: "ZZZ"} = acc ->
-    {:halt, acc.count}
+# Just because otherwise this cell breaks on the p2 example input
+try do
+  visited =
+    steps
+    |> Stream.cycle()
+    |> Stream.scan(start, fn step, node ->
+      nodes[node] |> elem(step)
+    end)
+    |> Stream.take_while(&(&1 != "ZZZ"))
+    |> Enum.count()
 
-  step, acc ->
-    next = nodes[acc.current] |> elem(step)
-    new_state = %{acc | current: next, count: acc.count + 1}
-    {:cont, new_state}
-end)
+  visited + 1
+rescue
+  _ -> :err
+end
 ```
 
 ## Part 2
 
 ```elixir
+steps = Stream.cycle(steps)
 
+count =
+  Map.keys(nodes)
+  |> Enum.filter(&match?(<<_, _, "A">>, &1))
+  |> Enum.map(fn start ->
+    Stream.scan(steps, start, fn step, node ->
+      nodes[node] |> elem(step)
+    end)
+  end)
+  |> Stream.zip()
+  |> Stream.take_while(fn set ->
+    set
+    |> Tuple.to_list()
+    |> Enum.all?(&match?(<<_, _, "Z">>, &1))
+    |> Kernel.not()
+  end)
+  |> Enum.count()
+
+count + 1
 ```
 
-<!-- livebook:{"offset":1243,"stamp":{"token":"XCP.8CW84UJLM0sFe9YhQ50WzEHdsrIoGm76IN1xe2Nxv5iAcJlHqYRywl3BZeoOohb7LNb-4rGrQjAoNCE-RNclLQNDLcr2LUH1cXt0fQPsEdFOh-XDdJHx_VOE51E","version":2}} -->
+<!-- livebook:{"offset":1667,"stamp":{"token":"XCP.K_gDF1gqo8pI4bgWb0fsE9WTDqlX75XUZzYo3j4bXx-CcAXkXaSGEUPK_0R57c4P8Nihy_8mORuNiStwwgsJy7ua8S8n_oqgEUrSBNyAwP2pJ4Q_nTEnrirr_RU","version":2}} -->
