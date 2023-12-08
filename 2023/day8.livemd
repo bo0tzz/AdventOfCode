@@ -1,0 +1,73 @@
+# AoC 2023 Day 8
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"8","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "8", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+## Parsing
+
+```elixir
+parse_node = fn string ->
+  <<id::binary-size(3)>> <> " = (" <> rest = string
+  <<left::binary-size(3)>> <> ", " <> rest = rest
+  <<right::binary-size(3)>> <> ")" = rest
+  {id, {left, right}}
+end
+```
+
+```elixir
+[steps, nodes] = String.split(puzzle_input, "\n\n", trim: true)
+
+steps =
+  steps
+  |> String.codepoints()
+  |> Enum.map(fn
+    "L" -> 0
+    "R" -> 1
+  end)
+
+nodes =
+  nodes
+  |> String.split("\n", trim: true)
+  |> Enum.map(parse_node)
+  |> Enum.into(%{})
+```
+
+## Part 1
+
+```elixir
+acc = %{
+  current: "AAA",
+  count: 0
+}
+
+Stream.cycle(steps)
+|> Enum.reduce_while(acc, fn
+  _, %{current: "ZZZ"} = acc ->
+    {:halt, acc.count}
+
+  step, acc ->
+    next = nodes[acc.current] |> elem(step)
+    new_state = %{acc | current: next, count: acc.count + 1}
+    {:cont, new_state}
+end)
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":1243,"stamp":{"token":"XCP.8CW84UJLM0sFe9YhQ50WzEHdsrIoGm76IN1xe2Nxv5iAcJlHqYRywl3BZeoOohb7LNb-4rGrQjAoNCE-RNclLQNDLcr2LUH1cXt0fQPsEdFOh-XDdJHx_VOE51E","version":2}} -->
