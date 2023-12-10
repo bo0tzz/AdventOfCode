@@ -1,0 +1,164 @@
+# AoC 2023 Day 10
+
+```elixir
+Mix.install(
+  [
+    {:kino_aoc, "~> 0.1.5"},
+    {:libgraph, "~> 0.16.0"},
+    {:kino, "~> 0.11.3"}
+  ],
+  consolidate_protocols: false
+)
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"10","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "10", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+```elixir
+# puzzle_input = """
+# 7-F7-
+# .FJ|7
+# SJLL7
+# |F--J
+# LJ.LJ
+# """ |> String.trim()
+```
+
+```elixir
+defimpl Kino.Render, for: Graph do
+  def to_livebook(graph) do
+    graph
+    |> to_mermaid()
+    |> Kino.Mermaid.new()
+    |> Kino.Render.to_livebook()
+  end
+
+  def to_mermaid(graph) do
+    edge =
+      case graph.type do
+        :directed -> "-->"
+        :undirected -> "---"
+      end
+
+    vertices =
+      graph.vertices
+      |> Enum.map(fn {v, l} -> "#{v}[\"#{l}\"]" end)
+      |> Enum.join("\n")
+
+    edges =
+      graph.edges
+      |> Enum.map(fn {{from, to}, _} -> "#{from} #{edge} #{to}" end)
+      |> Enum.join("\n")
+
+    """
+    flowchart TD
+    #{vertices}
+    #{edges}
+    """
+  end
+end
+
+defimpl String.Chars, for: Tuple do
+  def to_string({y, x}), do: "(#{y}, #{x})"
+end
+```
+
+## Parsing
+
+```elixir
+defmodule Pipes do
+  @offsets %{
+    north: {-1, 0},
+    east: {0, 1},
+    west: {0, -1},
+    south: {1, 0}
+  }
+
+  def parse_input(input) do
+    points = indexed_points(input)
+
+    edges =
+      Enum.flat_map(points, fn {point, char} ->
+        directions = connections(char)
+
+        for direction <- directions do
+          to = step(point, direction)
+          {point, to}
+        end
+      end)
+
+    # This should really be an undirected graph
+    # But those are somewhat broken in libgraph
+    graph =
+      Graph.new(type: :directed)
+      |> Graph.add_edges(List.flatten(edges))
+
+    {start, _} = Enum.find(points, &match?({_, "S"}, &1))
+
+    Graph.replace_vertex(graph, start, :start)
+  end
+
+  def connections("|"), do: [:north, :south]
+  def connections("-"), do: [:east, :west]
+  def connections("L"), do: [:north, :east]
+  def connections("J"), do: [:north, :west]
+  def connections("7"), do: [:south, :west]
+  def connections("F"), do: [:south, :east]
+  def connections("."), do: []
+  def connections("S"), do: [:north, :east, :west, :south]
+
+  def step({y, x}, dir) do
+    {dy, dx} = @offsets[dir]
+    {y + dy, x + dx}
+  end
+
+  def indexed_points(input) do
+    lines =
+      String.split(input, "\n")
+      |> Enum.with_index()
+
+    for {line, y} <- lines do
+      columns =
+        String.codepoints(line)
+        |> Enum.with_index()
+
+      for {character, x} <- columns do
+        {{y, x}, character}
+      end
+    end
+    |> List.flatten()
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+graph = Pipes.parse_input(puzzle_input)
+```
+
+## Part 1
+
+```elixir
+path = Graph.get_paths(graph, :start, :start) |> Enum.max()
+
+Graph.subgraph(graph, path)
+```
+
+```elixir
+div(length(path) - 1, 2)
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":3087,"stamp":{"token":"XCP.jo97JgzAHQc8tWd7JvHzwVzqMZrPa4W8KVzrJgSvpYDF9zBTMWfRtBdahEifcL1oBu7AxGZ75Ukx94loMQJjCt5g9po6REcNKiDwHtd0lu5IGx6fRcoAgHiPsBE","version":2}} -->
