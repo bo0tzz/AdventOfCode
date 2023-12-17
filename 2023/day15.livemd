@@ -1,0 +1,50 @@
+# AoC 2023 Day 15
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"15","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "15", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+```elixir
+defmodule HASH do
+  def hash(string) when is_binary(string), do: hash(String.to_charlist(string))
+
+  def hash(string) do
+    for char <- string, reduce: 0 do
+      acc -> hash(char, acc)
+    end
+  end
+
+  def hash(num, current) do
+    next = (current + num) * 17
+    Integer.mod(next, 256)
+  end
+end
+```
+
+## Part 1
+
+```elixir
+puzzle_input
+|> String.split(",", trim: true)
+|> Enum.map(&HASH.hash/1)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":859,"stamp":{"token":"XCP._bMRtI5aSBFKMgbWX2G6NZhHTNdsg71CsmCC5DMvcgwhccCaosjRrVfIhesS-W5DRm3u84RDtbLH_qMXkht5fAcNcP526F5hKRci-OMrAzzVQscXgw5SJR14E44","version":2}} -->
