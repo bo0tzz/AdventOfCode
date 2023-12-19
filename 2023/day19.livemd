@@ -1,0 +1,260 @@
+# AoC 2023 Day 19
+
+```elixir
+Mix.install([
+  {:kino_aoc, "~> 0.1.5"},
+  {:nimble_parsec, "~> 1.4"}
+])
+```
+
+## Input
+
+<!-- livebook:{"attrs":{"assign_to":"puzzle_input","day":"19","session_secret":"AOC_COOKIE_SECRET","year":"2023"},"chunks":null,"kind":"Elixir.KinoAOC.HelperCell","livebook_object":"smart_cell"} -->
+
+```elixir
+{:ok, puzzle_input} =
+  KinoAOC.download_puzzle("2023", "19", System.fetch_env!("LB_AOC_COOKIE_SECRET"))
+```
+
+```elixir
+# puzzle_input = """
+# px{a<2006:qkq,m>2090:A,rfg}
+# pv{a>1716:R,A}
+# lnx{m>1548:A,A}
+# rfg{s<537:gd,x>2440:R,A}
+# qs{s>3448:A,lnx}
+# qkq{x<1416:A,crn}
+# crn{x>2662:A,R}
+# in{s<1351:px,qqz}
+# qqz{s>2770:qs,m<1801:hdj,R}
+# gd{a>3333:R,R}
+# hdj{m>838:A,pv}
+
+# {x=787,m=2655,a=1222,s=2876}
+# {x=1679,m=44,a=2067,s=496}
+# {x=2036,m=264,a=79,s=2244}
+# {x=2461,m=1339,a=466,s=291}
+# {x=2127,m=1623,a=2188,s=1013}
+# """
+```
+
+## Parsing
+
+```elixir
+defmodule Parser do
+  import NimbleParsec
+
+  id =
+    choice([
+      ascii_string([?a..?z], min: 1),
+      string("A"),
+      string("R")
+    ])
+    |> unwrap_and_tag(:id)
+
+  property =
+    choice([
+      string("x"),
+      string("m"),
+      string("a"),
+      string("s")
+    ])
+    |> unwrap_and_tag(:property)
+
+  comparison =
+    choice([
+      string(">"),
+      string("<")
+    ])
+    |> unwrap_and_tag(:comparison)
+
+  defparsec(
+    :rule,
+    property
+    |> concat(comparison)
+    |> unwrap_and_tag(integer(min: 1), :number)
+    |> ignore(string(":"))
+    |> concat(id)
+    |> ignore(optional(string(",")))
+    |> tag(:rule)
+  )
+
+  workflow =
+    id
+    |> ignore(string("{"))
+    |> times(parsec(:rule), min: 1)
+    |> ignore(optional(string(",")))
+    |> concat(id |> unwrap_and_tag(:default))
+    |> ignore(string("}"))
+
+  defparsec(:workflow, workflow)
+
+  part_value =
+    property
+    |> ignore(string("="))
+    |> unwrap_and_tag(integer(min: 1), :value)
+    |> ignore(optional(string(",")))
+    |> wrap()
+
+  part =
+    ignore(string("{"))
+    |> times(part_value, min: 1)
+    |> ignore(string("}"))
+
+  defparsec(:part, part)
+end
+```
+
+```elixir
+defmodule Part do
+  def parse(string) do
+    {:ok, parsed, _, _, _, _} = Parser.part(string)
+    Enum.into(parsed, %{}, fn [property: p, value: v] -> {String.to_atom(p), v} end)
+  end
+end
+```
+
+```elixir
+defmodule Rule do
+  defstruct [:compare, :destination]
+
+  def from_parsed(parsed) do
+    prop = parsed[:property] |> String.to_atom()
+
+    compare = fn part ->
+      case parsed[:comparison] do
+        ">" -> part[prop] > parsed[:number]
+        "<" -> part[prop] < parsed[:number]
+      end
+    end
+
+    %Rule{
+      compare: compare,
+      destination: String.to_atom(parsed[:id])
+    }
+  end
+end
+```
+
+```elixir
+defmodule Workflow do
+  defstruct [:id, :rules, :fallback]
+
+  use GenServer
+
+  def parse(string) do
+    {:ok, parsed, _, _, _, _} = Parser.workflow(string)
+    id = String.to_atom(parsed[:id])
+    {:id, default} = parsed[:default]
+
+    rules =
+      parsed
+      |> Keyword.get_values(:rule)
+      |> Enum.map(&Rule.from_parsed/1)
+
+    %Workflow{
+      id: id,
+      rules: rules,
+      fallback: String.to_atom(default)
+    }
+  end
+
+  def apply_rules(part, %Workflow{rules: [], fallback: fallback}), do: send(fallback, part)
+
+  def apply_rules(part, %Workflow{rules: [rule | rules]} = wf) do
+    case rule.compare.(part) do
+      true -> send(rule.destination, part)
+      false -> apply_rules(part, %Workflow{wf | rules: rules})
+    end
+  end
+
+  # Process logic
+
+  def start_link(%Workflow{} = workflow) do
+    GenServer.start_link(__MODULE__, workflow, name: workflow.id)
+  end
+
+  @impl true
+  def init(%Workflow{} = state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_info(part, state) do
+    apply_rules(part, state)
+
+    {:noreply, state}
+  end
+end
+```
+
+```elixir
+[workflows, parts] = String.split(puzzle_input, "\n\n", trim: true)
+
+workflows =
+  workflows
+  |> String.split("\n")
+  |> Enum.map(&Workflow.parse/1)
+```
+
+```elixir
+parts =
+  parts
+  |> String.split("\n", trim: true)
+  |> Enum.map(&Part.parse/1)
+```
+
+## Part 1
+
+```elixir
+defmodule Rejector do
+  use GenServer
+
+  def start_link(args), do: GenServer.start_link(__MODULE__, args, name: :R)
+
+  def init(_), do: {:ok, []}
+
+  def handle_info(msg, state), do: {:noreply, [msg | state]}
+end
+
+defmodule Acceptor do
+  use GenServer
+
+  def start_link(args), do: GenServer.start_link(__MODULE__, args, name: :A)
+
+  def init(_), do: {:ok, 0}
+
+  def handle_info(part, state) do
+    part_rating =
+      Map.values(part)
+      |> Enum.sum()
+
+    {:noreply, state + part_rating}
+  end
+end
+```
+
+```elixir
+Rejector.start_link([])
+Acceptor.start_link([])
+```
+
+```elixir
+workflows |> Enum.map(&Workflow.start_link/1)
+```
+
+```elixir
+parts |> Enum.map(fn p -> send(:in, p) end)
+```
+
+```elixir
+:sys.get_state(:A)
+```
+
+## Part 2
+
+```elixir
+
+```
+
+<!-- livebook:{"offset":4762,"stamp":{"token":"XCP.Lk97xPJBg8HeCC98fx0EjrQayjgsZrVt80Oj3ARk0xsj2tQaIZgBrqb5EboW0PViqaVskVWj5PH44qf_R8zSSiUMs42JeWb6C3QXODauqZcqf0XyX2S8RFjKq7o","version":2}} -->
