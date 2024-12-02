@@ -1,4 +1,0 @@
-[packages]
-gleam_stdlib = "0.45.0"
-gleam_erlang = "0.32.0"
-gleeunit = "1.2.0"

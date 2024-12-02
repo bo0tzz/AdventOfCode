@@ -1,6 +1,5 @@
-import day1/part1
-import gleam/io
+import day1/part2.{run}
 
 pub fn main() {
-  part1.run()
+  run()
 }
