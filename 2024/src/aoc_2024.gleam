@@ -1,4 +1,4 @@
-import day1/part2.{run}
+import day2/part1.{run}
 
 pub fn main() {
   run()
