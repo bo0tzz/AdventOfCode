@@ -1,6 +1,5 @@
 import advent
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option
 import gleam/string
@@ -55,15 +54,19 @@ pub fn parse(input: String) -> Input {
   Input(rotations:, start: 50)
 }
 
-pub fn part_a(input: Input) {
+fn count_zero_stops(rotations: List(Rotation), start: Int) {
   let #(_, stops) =
-    list.map_fold(over: input.rotations, from: input.start, with: fn(acc, i) {
-      let new_position = rotate(acc, i)
-      let assert Ok(pos) = int.modulo(new_position, 100)
-      #(pos, pos)
-    })
+  list.map_fold(over: rotations, from: start, with: fn(acc, i) {
+    let new_position = rotate(acc, i)
+    let assert Ok(pos) = int.modulo(new_position, 100)
+    #(pos, pos)
+  })
 
   list.count(stops, where: fn(n) { n == 0 })
+}
+
+pub fn part_a(input: Input) {
+  count_zero_stops(input.rotations, input.start)
 }
 
 pub fn part_b(input: Input) {
@@ -74,14 +77,8 @@ pub fn part_b(input: Input) {
         Right(n) -> list.repeat(Right(1), times: n)
         Left(n) -> list.repeat(Left(1), times: n)
       }
-    }) |> list.flatten()
-
-  let #(_, stops) =
-    list.map_fold(over: rotations, from: input.start, with: fn(acc, i) {
-      let new_position = rotate(acc, i)
-      let assert Ok(pos) = int.modulo(new_position, 100)
-      #(pos, pos)
     })
+    |> list.flatten()
 
-  list.count(stops, where: fn(n) { n == 0 })
+  count_zero_stops(rotations, input.start)
 }
