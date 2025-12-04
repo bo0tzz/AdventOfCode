@@ -11,10 +11,10 @@ pub fn day() {
     day: 01,
     parse:,
     part_a:,
-    expected_a: option.None,
+    expected_a: option.Some(989),
     wrong_answers_a: [],
     part_b:,
-    expected_b: option.None,
+    expected_b: option.Some(5941),
     wrong_answers_b: [],
   )
 }
@@ -67,5 +67,21 @@ pub fn part_a(input: Input) {
 }
 
 pub fn part_b(input: Input) {
-  13
+  // Lazy approach: destructure rotations so we hit every digit stop
+  let rotations =
+    list.map(input.rotations, fn(rotation) {
+      case rotation {
+        Right(n) -> list.repeat(Right(1), times: n)
+        Left(n) -> list.repeat(Left(1), times: n)
+      }
+    }) |> list.flatten()
+
+  let #(_, stops) =
+    list.map_fold(over: rotations, from: input.start, with: fn(acc, i) {
+      let new_position = rotate(acc, i)
+      let assert Ok(pos) = int.modulo(new_position, 100)
+      #(pos, pos)
+    })
+
+  list.count(stops, where: fn(n) { n == 0 })
 }
