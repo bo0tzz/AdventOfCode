@@ -1,4 +1,5 @@
 import advent
+import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option
@@ -14,7 +15,7 @@ pub fn day() {
     expected_a: option.Some(17_113),
     wrong_answers_a: [],
     part_b:,
-    expected_b: option.None,
+    expected_b: option.Some(169_709_990_062_889),
     wrong_answers_b: [],
   )
 }
@@ -41,36 +42,46 @@ pub fn parse(input: String) -> Input {
 
 pub fn part_a(input: Input) {
   list.map(input.banks, with: fn(bank) {
-    find_largest_joltage(bank.batteries)
-    |> digits_to_num()
+    find_largest_series(bank.batteries, 2)
+    |> int.undigits(10)
+    |> utils.ok()
   })
   |> int.sum()
 }
 
 pub fn part_b(input: Input) {
-  0
+  list.map(input.banks, with: fn(bank) {
+    find_largest_series(bank.batteries, 12)
+    |> int.undigits(10)
+    |> utils.ok()
+  })
+  |> int.sum()
 }
 
-fn digits_to_num(digits: #(Int, Int)) -> Int {
-  let #(x, y) = digits
-  x * 10 + y
-}
+pub fn find_largest_series(digits: List(Int), limit: Int) {
+  use <- bool.guard(limit <= 1, [list.max(digits, int.compare) |> utils.ok()])
+  let take = list.length(digits) - limit + 1
 
-fn find_largest_joltage(batteries: List(Int)) -> #(Int, Int) {
-  case batteries {
-    [] | [_] -> panic as "no batteries"
-    [x, y] -> #(x, y)
-    [x, ..rest] -> {
-      let #(candidate_x, candidate_y) = find_largest_joltage(rest)
-      let x_order = int.compare(x, candidate_x)
-      let xy_order = int.compare(candidate_x, candidate_y)
-      case x_order, xy_order {
-        order.Lt, _ -> #(candidate_x, candidate_y)
-        order.Gt, order.Gt -> #(x, candidate_x)
-        order.Gt, _ -> #(x, candidate_y)
-        order.Eq, order.Gt -> #(x, candidate_x)
-        order.Eq, _ -> #(x, candidate_y)
-      }
+  case list.split(digits, take) {
+    #(left, []) -> left
+    #(head, _) -> {
+      let chosen_digit =
+        list.index_fold(head, Accumulator(0, 0), fn(acc, digit, index) {
+          case int.compare(acc.largest_digit, digit) {
+            order.Lt -> Accumulator(digit, index)
+            order.Gt -> acc
+            order.Eq -> acc
+          }
+        })
+      let #(_, cont) = list.split(digits, chosen_digit.index + 1)
+      list.append(
+        [chosen_digit.largest_digit],
+        find_largest_series(cont, limit - 1),
+      )
     }
   }
+}
+
+type Accumulator {
+  Accumulator(largest_digit: Int, index: Int)
 }
