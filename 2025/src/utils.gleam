@@ -10,3 +10,8 @@ pub fn parse_int(string: String) -> Int {
 pub fn lines(string: String) -> List(String) {
   string |> string.trim() |> string.split("\n") |> list.map(string.trim)
 }
+
+pub fn ok(res: Result(a, _)) -> a {
+  let assert Ok(value) = res
+  value
+}
