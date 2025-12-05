@@ -19,41 +19,28 @@ pub fn day() {
   )
 }
 
-pub type Range {
-  Range(from: Int, to: Int)
-}
-
-fn parse_range(string: String) -> Range {
-  let assert [from, to] =
-    string.trim(string)
-    |> string.split("-")
-    as { "invalid range: " <> string }
-
-  Range(from: utils.parse_int(from), to: utils.parse_int(to))
-}
-
 pub type Input {
-  Input(ranges: List(Range))
+  Input(ranges: List(utils.Range))
 }
 
 pub fn parse(input: String) -> Input {
   let ranges =
     string.trim(input)
     |> string.split(",")
-    |> list.map(parse_range)
+    |> list.map(utils.parse_range)
 
   Input(ranges:)
 }
 
 pub fn part_a(input: Input) {
-  list.map(input.ranges, fn(range) { list.range(range.from, range.to) })
+  list.map(input.ranges, utils.range_to_list)
   |> list.flatten()
   |> list.filter(is_repetitive(_, 2))
   |> int.sum()
 }
 
 pub fn part_b(input: Input) {
-  list.map(input.ranges, fn(range) { list.range(range.from, range.to) })
+  list.map(input.ranges, utils.range_to_list)
   |> list.flatten()
   // Ideally this should be unlimited but it's probably fine
   |> list.filter(is_repetitive(_, 20))
