@@ -30,7 +30,7 @@ pub type Input {
 
 pub fn parse(input: String) -> Input {
   let banks =
-    utils.lines(input)
+    utils.lines_trimmed(input)
     |> list.map(fn(bank) {
       let batteries =
         string.to_graphemes(bank)

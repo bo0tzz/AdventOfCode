@@ -4,17 +4,31 @@ import gleam/order
 import gleam/string
 
 pub fn parse_int(string: String) -> Int {
-  let assert Ok(int) = int.parse(string) as { "invalid int: " <> string }
+  let assert Ok(int) = string.trim(string) |> int.parse() as { "invalid int: " <> string }
   int
 }
 
-pub fn lines(string: String) -> List(String) {
+pub fn lines_trimmed(string: String) -> List(String) {
   string |> string.trim() |> string.split("\n") |> list.map(string.trim)
 }
 
 pub fn ok(res: Result(a, _)) -> a {
   let assert Ok(value) = res
   value
+}
+
+pub fn slice_on(string: String, on: List(Int)) -> List(String) {
+  do_slice_on(string, on, 0)
+}
+
+fn do_slice_on(string: String, on: List(Int), from: Int) -> List(String) {
+  case on {
+    [end, ..rest] -> {
+      let slice = string.slice(string, from, end - from)
+      [slice, ..do_slice_on(string, rest, end + 1)]
+    }
+    [] -> [string.slice(string, from, length: 100)]
+  }
 }
 
 pub type Range {

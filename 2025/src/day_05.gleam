@@ -26,10 +26,10 @@ pub fn parse(input: String) -> Input {
   let assert Ok(#(ranges_str, ingredients_str)) =
     string.split_once(input, "\n\n")
   let fresh =
-    utils.lines(ranges_str)
+    utils.lines_trimmed(ranges_str)
     |> list.map(utils.parse_range)
 
-  let ingredients = utils.lines(ingredients_str) |> list.map(utils.parse_int)
+  let ingredients = utils.lines_trimmed(ingredients_str) |> list.map(utils.parse_int)
 
   Input(fresh:, ingredients:)
 }

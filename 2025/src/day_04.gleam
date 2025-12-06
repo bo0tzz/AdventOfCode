@@ -52,7 +52,7 @@ pub type Input {
 }
 
 pub fn parse(input: String) -> Input {
-  let lines = utils.lines(input)
+  let lines = utils.lines_trimmed(input)
   let positions =
     list.index_map(lines, fn(row, x) {
       string.split(row, "")
