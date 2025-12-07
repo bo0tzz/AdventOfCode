@@ -1,3 +1,4 @@
+import day_07
 import simplifile
 import day_06
 import advent
@@ -22,6 +23,7 @@ pub fn run_advent() {
   |> advent.add_day(day_04.day())
   |> advent.add_day(day_05.day())
   |> advent.add_day(day_06.day())
+  |> advent.add_day(day_07.day())
   |> advent.add_padding_days(12)
   |> advent.run()
 }
